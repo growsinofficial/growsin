@@ -1,0 +1,222 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+
+const Header = ({ dark }) => {
+  const currentPath = usePathname();
+  const activeMenuFuntion = (value) =>
+    value.some((el) => currentPath.includes(el)) ? "mil-active" : "";
+  const [toggle, setToggle] = useState(false);
+
+  return (
+    <div className={`mil-top-panel ${dark ? "mil-dark-2" : ""}`}>
+      <div className="container">
+        <Link href="/" className="mil-logo">
+          <img
+            src={dark ? "img/logo-light.png" : "img/logo.png"}
+            alt="Growsin"
+            width={223}
+            height={222}
+          />
+        </Link>
+
+        <nav className={`mil-top-menu ${toggle ? "mil-active" : ""}`}>
+          <ul>
+            {/* HOME */}
+            {/* <li
+              className={`mil-has-children ${
+                currentPath.includes("home") || currentPath === "/"
+                  ? "mil-active"
+                  : ""
+              }`}
+            >
+              <a href="#.">Home</a>
+              <ul>
+                <li>
+                  <Link href="/">Type 1</Link>
+                </li>
+                <li>
+                  <Link href="home-2">Type 2</Link>
+                </li>
+                <li>
+                  <Link href="home-3">Type 3</Link>
+                </li>
+                <li>
+                  <Link href="home-4">Type 4</Link>
+                </li>
+                <li>
+                  <Link href="home-5">Type 5</Link>
+                </li>
+              </ul>
+            </li> */}
+
+            {/* ABOUT US */}
+            <li
+              className={`mil-has-children ${activeMenuFuntion([
+                "about",
+                "philosophy",
+                "founder",
+                "vision-mission",
+              ])}`}
+            >
+              <a href="#.">About Us</a>
+              <ul>
+                {/* <li>
+                  <Link href="about">Overview</Link>
+                </li> */}
+                <li>
+                  <Link href="Philosophy">Our Philosophy</Link>
+                </li>
+                <li>
+                  <Link href="founder">Founder’s Profile</Link>
+                </li>
+                <li>
+                  <Link href="vision-mission">Vision &amp; Mission</Link>
+                </li>
+              </ul>
+            </li>
+
+            {/* SERVICES */}
+            <li
+              className={`mil-has-children ${activeMenuFuntion([
+                "services",
+                "investment-advisory",
+                "research-analysis",
+              ])}`}
+            >
+              <a href="#.">Services</a>
+              <ul>
+                {/* <li>
+                  <Link href="services">Overview</Link>
+                </li> */}
+                <li>
+                  <Link href="investment-advisory">
+                    Investment Advisory
+                  </Link>
+                </li>
+                <li>
+                  <Link href="research-analysis">
+                    Research Analysis
+                  </Link>
+                </li>
+              </ul>
+            </li>
+
+            {/* GROW TOOLS */}
+            <li
+              className={`mil-has-children ${activeMenuFuntion([
+                "grow-tools",
+                "sip-calculator",
+                "lump-sum-calculator",
+                "retirement-calculator",
+              ])}`}
+            >
+              <a href="#.">Grow Tools</a>
+              <ul>
+                <li>
+                  <Link href="sip-calculator">SIP Calculator</Link>
+                </li>
+                <li>
+                  {/* <Link href="lump-sum-calculator">
+                    Lump Sum Calculator
+                  </Link> */}
+                </li>
+                <li>
+                  <Link href="retirement-calculator">
+                    Retirement Calculator
+                  </Link>
+                </li>
+              </ul>
+            </li>
+
+            {/* REGULATORY */}
+            <li
+              className={`mil-has-children ${activeMenuFuntion([
+                "regulatory",
+                "investor-ia",
+                "investor-ra",
+                "disclosure",
+              ])}`}
+            >
+              <a href="#.">Regulatory</a>
+              <ul>
+                <li>
+                  <Link href="investor-ia">Investor – IA</Link>
+                </li>
+                <li>
+                  <Link href="investor-ra">Investor – RA</Link>
+                </li>
+                <li>
+                  <Link href="disclosure">Disclosure</Link>
+                </li>
+              </ul>
+            </li>
+
+            {/* BLOG (kept as-is) */}
+            {/* <li
+              className={`mil-has-children ${activeMenuFuntion([
+                "blog",
+                "publication",
+              ])}`}
+            >
+              <a href="#.">Blog</a>
+              <ul>
+                <li>
+                  <Link href="blog">Blog list</Link>
+                </li>
+                <li>
+                  <Link href="publication">Blog details</Link>
+                </li>
+              </ul>
+            </li> */}
+
+            {/* CONTACT */}
+            <li className={`${activeMenuFuntion(["contact"])}`}>
+              <Link href="contact">Contact</Link>
+            </li>
+
+            {/* PAGES (optional, left intact) */}
+            {/* <li
+              className={`mil-has-children ${activeMenuFuntion([
+                "career",
+                "price",
+                "register",
+              ])}`}
+            >
+              <a href="#.">Pages</a>
+              <ul>
+                <li>
+                  <Link href="career">Career</Link>
+                </li>
+                <li>
+                  <Link href="career-details">Career details</Link>
+                </li>
+                <li>
+                  <Link href="price">Pricing</Link>
+                </li>
+                <li>
+                  <Link href="register">Register</Link>
+                </li>
+              </ul>
+            </li> */}
+          </ul>
+        </nav>
+
+        <div className="mil-menu-buttons">
+          <Link href="register" className="mil-btn mil-sm">
+            get started
+          </Link>
+          <div
+            className={`mil-menu-btn ${toggle ? "mil-active" : ""}`}
+            onClick={() => setToggle(!toggle)}
+          >
+            <span />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Header;

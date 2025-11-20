@@ -116,9 +116,9 @@ const Header = ({ dark }) => {
                   <Link href="sip-calculator">SIP Calculator</Link>
                 </li>
                 <li>
-                  {/* <Link href="lump-sum-calculator">
+                  <Link href="lump-sum-calculator">
                     Lump Sum Calculator
-                  </Link> */}
+                  </Link> 
                 </li>
                 <li>
                   <Link href="retirement-calculator">

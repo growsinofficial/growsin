@@ -1,532 +1,567 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useState, useEffect, useMemo } from 'react';
 import PlaxLayout from "@/layouts/PlaxLayout";
-import { PageBanner } from "@/components/Banner";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  Tooltip,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { AreaChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChevronsRight, Info, TrendingUp, DollarSign, Briefcase, Home, Target, LifeBuoy, Download, BarChart2, AlertTriangle, CheckCircle2, SlidersHorizontal } from 'lucide-react';
 
-/* ---------------- Theme ---------------- */
-const BRAND_A = "#175ee2";
-const BRAND_B = "#7d2ae8";
-const ACCENT = "rgb(31 154 50)";
-const ACCENT_DARK = "rgb(31 154 50)";
-const INVESTED_COLOR = "#eaf1ff";
-const RETURNS_COLOR = "#4169ff";
+// --- PDF Generation Libraries (jsPDF & html2canvas) ---
+const loadScript = (src) => {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+    });
+};
 
-const inr = (n) =>
-  Number(n || 0).toLocaleString("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  });
 
-/* ---------------- Helpers / Models ---------------- */
-function projectBalance({ currentSavings, monthlyContribution, annualReturnPct, years }) {
-  const monthlyRate = Math.pow(1 + annualReturnPct / 100, 1 / 12) - 1;
-  const months = Math.max(0, Math.floor(years * 12));
-  const out = [];
-  let balance = currentSavings || 0;
-  let invested = currentSavings || 0;
-  for (let m = 1; m <= months; m++) {
-    invested += monthlyContribution;
-    balance = balance * (1 + monthlyRate) + monthlyContribution;
-    if (m % 12 === 0) {
-      const y = m / 12;
-      out.push({ year: y, invested, balance, returns: Math.max(0, balance - invested) });
+// --- UTILITY FUNCTIONS ---
+
+const randomNormal = (mean, stdDev) => {
+    let u1 = 0, u2 = 0;
+    while (u1 === 0) u1 = Math.random();
+    while (u2 === 0) u2 = Math.random();
+    const z0 = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+    return z0 * stdDev + mean;
+};
+
+const formatCurrency = (value) => {
+    if (value === null || value === undefined) return '$...';
+    if (Math.abs(value) >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+    if (Math.abs(value) >= 1e3) return `$${(value / 1e3).toFixed(0)}k`;
+    return `$${Math.round(value)}`;
+};
+
+
+// --- CORE SIMULATION ENGINE ---
+
+const runMonteCarloSimulation = (inputs, numSimulations = 1000) => {
+    const allSimulations = [];
+    const worstDrawdowns = [];
+    let successCount = 0;
+
+    const totalYears = inputs.lifeExpectancy - inputs.currentAge;
+
+    for (let i = 0; i < numSimulations; i++) {
+        const yearlyData = [];
+        let currentBalance = inputs.currentSavings.taxable + inputs.currentSavings.taxDeferred + inputs.currentSavings.rothIra;
+        let currentSalary = inputs.annualIncome;
+        let initialRetirementBalance = -1;
+        let peakBalance = currentBalance;
+        let maxDrawdown = 0;
+
+        for (let j = 0; j <= totalYears; j++) {
+            const age = inputs.currentAge + j;
+            
+            if (inputs.stressTest.enabled && age === inputs.stressTest.age) {
+                currentBalance *= (1 - inputs.stressTest.dropPercent / 100);
+            }
+            
+            const annualReturnRate = randomNormal(inputs.investments.expectedReturn / 100, inputs.investments.volatility / 100);
+            currentBalance *= (1 + annualReturnRate);
+
+            if (age < inputs.retirementAge) { // Accumulation Phase
+                const contributions = currentSalary * (inputs.savingsRate / 100);
+                currentBalance += contributions;
+                currentSalary *= (1 + inputs.salaryGrowth / 100);
+            } else { // Withdrawal Phase
+                if (initialRetirementBalance === -1) initialRetirementBalance = currentBalance;
+                
+                const retirementYear = age - inputs.retirementAge;
+                const inflationMultiplier = Math.pow(1 + inputs.inflationRate / 100, retirementYear);
+                const socialSecurityIncome = age >= inputs.socialSecurityAge ? (inputs.socialSecurityBenefit * inflationMultiplier) : 0;
+                
+                let withdrawalAmount = 0;
+                switch(inputs.withdrawalStrategy) {
+                    case 'fourPercentRule':
+                        withdrawalAmount = (initialRetirementBalance * 0.04) * inflationMultiplier;
+                        break;
+                    case 'inflationAdjusted':
+                    default:
+                        withdrawalAmount = inputs.retirementExpenses * inflationMultiplier;
+                        break;
+                }
+                currentBalance -= Math.max(0, withdrawalAmount - socialSecurityIncome);
+            }
+
+            const lifeEvent = inputs.lifeEvents.find(e => e.age === age);
+            if (lifeEvent) currentBalance += lifeEvent.amount;
+            
+            if (currentBalance > peakBalance) {
+                peakBalance = currentBalance;
+            } else {
+                const drawdown = (peakBalance - currentBalance) / peakBalance;
+                if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+            }
+
+            if (currentBalance < 0) {
+                yearlyData.push({ year: new Date().getFullYear() + j, age: age, balance: 0 });
+                break;
+            }
+            yearlyData.push({ year: new Date().getFullYear() + j, age: age, balance: currentBalance });
+        }
+        
+        allSimulations.push(yearlyData);
+        worstDrawdowns.push(maxDrawdown);
+        if (yearlyData.length > totalYears && yearlyData[yearlyData.length - 1].balance > 0) successCount++;
     }
-  }
-  if (months === 0) out.push({ year: 0, invested, balance, returns: Math.max(0, balance - invested) });
-  return out;
-}
+    
+    const chartData = [];
+    for (let j = 0; j <= totalYears; j++) {
+        const balancesForYear = allSimulations.map(sim => sim[j]?.balance).filter(b => b !== undefined && b !== null).sort((a, b) => a - b);
+        if (balancesForYear.length > 0) {
+            chartData.push({
+                year: new Date().getFullYear() + j, age: inputs.currentAge + j,
+                p10: balancesForYear[Math.floor(balancesForYear.length * 0.10)],
+                p50: balancesForYear[Math.floor(balancesForYear.length * 0.50)],
+                p90: balancesForYear[Math.floor(balancesForYear.length * 0.90)],
+            });
+        }
+    }
+    
+    worstDrawdowns.sort((a, b) => a - b);
+    const medianWorstDrawdown = worstDrawdowns[Math.floor(worstDrawdowns.length * 0.50)];
+    const successProbability = (successCount / numSimulations) * 100;
+    const medianNestEgg = chartData.find(d => d.age === inputs.retirementAge)?.p50 || 0;
 
-function incomeToCorpus(monthlyIncome, safeWithdrawPct = 4) {
-  const yearly = monthlyIncome * 12;
-  const corpus = yearly / (safeWithdrawPct / 100);
-  return corpus;
-}
+    return { chartData, successProbability, medianNestEgg, medianWorstDrawdown };
+};
 
-/* ---------------- Page ---------------- */
-export default function RetirementCalculatorPage() {
-  // UI state
-  const [tab, setTab] = useState("goal"); // 'goal' or 'income'
-  const [currentAge, setCurrentAge] = useState(30);
-  const [retireAge, setRetireAge] = useState(60);
-  const [currentSavings, setCurrentSavings] = useState(500000);
-  const [monthlyContribution, setMonthlyContribution] = useState(15000);
-  const [expectedReturn, setExpectedReturn] = useState(10);
-  const [inflation, setInflation] = useState(6);
 
-  // goal-based
-  const [targetCorpus, setTargetCorpus] = useState(20000000); // ₹2 Cr
-  // income-based
-  const [desiredMonthlyIncome, setDesiredMonthlyIncome] = useState(50000);
-  const [safeWithdraw, setSafeWithdraw] = useState(4); // %
+// --- UI COMPONENTS ---
 
-  // presets (kept external for re-use)
-  const presets = {
-    conservative: { monthlyContribution: 5000, expectedReturn: 6 },
-    balanced: { monthlyContribution: 15000, expectedReturn: 9 },
-    aggressive: { monthlyContribution: 30000, expectedReturn: 12 },
-  };
-
-  // which preset is active
-  const [selectedPreset, setSelectedPreset] = useState("aggressive");
-
-  const applyPreset = (key) => {
-    const p = presets[key] || {};
-    setSelectedPreset(key);
-    if (p.monthlyContribution !== undefined) setMonthlyContribution(p.monthlyContribution);
-    if (p.expectedReturn !== undefined) setExpectedReturn(p.expectedReturn);
-  };
-
-  // Clear preset when user edits manually
-  const userEdited = () => {
-    if (selectedPreset !== null) setSelectedPreset(null);
-  };
-
-  const yearsToRetire = Math.max(0, retireAge - currentAge);
-
-  const projection = useMemo(
-    () =>
-      projectBalance({
-        currentSavings,
-        monthlyContribution,
-        annualReturnPct: expectedReturn,
-        years: yearsToRetire,
-      }),
-    [currentSavings, monthlyContribution, expectedReturn, yearsToRetire]
-  );
-
-  const finalBalance = projection.length ? projection[projection.length - 1].balance : currentSavings;
-  const investedTotal = projection.length ? projection[projection.length - 1].invested : currentSavings;
-  const estReturns = Math.max(0, finalBalance - investedTotal);
-
-  const requiredCorpusFromIncome = useMemo(() => incomeToCorpus(desiredMonthlyIncome, safeWithdraw), [
-    desiredMonthlyIncome,
-    safeWithdraw,
-  ]);
-
-  const remainingToGoal = Math.max(0, targetCorpus - finalBalance);
-  const remainingToIncomeGoal = Math.max(0, requiredCorpusFromIncome - finalBalance);
-
-  const donutDataGoal = [
-    { name: "Invested", value: investedTotal },
-    { name: "Est. returns", value: estReturns },
-  ];
-
-  const chartData = projection.map((p) => ({ name: `Y${p.year}`, invested: Math.round(p.invested), value: Math.round(p.balance) }));
-
-  const goalMet = tab === "goal" ? finalBalance >= targetCorpus : finalBalance >= requiredCorpusFromIncome;
-
-  return (
-    <PlaxLayout bg={false}>
-      {/* Keep the shortened banner text you prefer */}
-      <PageBanner pageName="Retirement Calculator" title="Estimate your retirement savings goal or income based." />
-
-      <div className="mil-blog-list mil-p-0-160">
-        <div className="container">
-          <div className="row">
-            {/* tabs */}
-            <div className="col-xl-12 mil-mb-20">
-              <div className="tab-row">
-                <button className={`tab ${tab === "goal" ? "active" : ""}`} onClick={() => setTab("goal")}>Goal-based</button>
-                <button className={`tab ${tab === "income" ? "active" : ""}`} onClick={() => setTab("income")}>Income-based</button>
-              </div>
-            </div>
-
-            {/* left column: inputs */}
-            <div className="col-md-7">
-              <div className="card-form">
-                <div className="form-row">
-                  <label className="label">Current age</label>
-                  <div className="row-inline">
-                    <input
-                      className="number-input badge-like"
-                      type="number"
-                      min={18}
-                      max={70}
-                      step={1}
-                      value={currentAge}
-                      onChange={(e) => { setCurrentAge(Number(e.target.value || 0)); userEdited(); }}
-                    />
-                    <input className="mil-input range-input" type="range" min={18} max={70} step={1} value={currentAge} onChange={(e) => { setCurrentAge(Number(e.target.value)); userEdited(); }} />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <label className="label">Planned retirement age</label>
-                  <div className="row-inline">
-                    <input
-                      className="number-input badge-like"
-                      type="number"
-                      min={35}
-                      max={75}
-                      step={1}
-                      value={retireAge}
-                      onChange={(e) => { setRetireAge(Number(e.target.value || 0)); userEdited(); }}
-                    />
-                    <input className="mil-input range-input" type="range" min={35} max={75} step={1} value={retireAge} onChange={(e) => { setRetireAge(Number(e.target.value)); userEdited(); }} />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <label className="label">Current savings (₹)</label>
-                  <div className="row-inline">
-                    <input
-                      className="pill-input badge-like"
-                      type="number"
-                      min={0}
-                      step={1000}
-                      value={currentSavings}
-                      onChange={(e) => { setCurrentSavings(Number(e.target.value || 0)); userEdited(); }}
-                    />
-                    <input className="mil-input range-input" type="range" min={0} max={20000000} step={10000} value={currentSavings} onChange={(e) => { setCurrentSavings(Number(e.target.value)); userEdited(); }} />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <label className="label">Monthly contribution (₹)</label>
-                  <div className="row-inline">
-                    <input
-                      className="pill-input badge-like"
-                      type="number"
-                      min={0}
-                      step={500}
-                      value={monthlyContribution}
-                      onChange={(e) => { setMonthlyContribution(Number(e.target.value || 0)); userEdited(); }}
-                    />
-                    <input className="mil-input range-input" type="range" min={0} max={200000} step={500} value={monthlyContribution} onChange={(e) => { setMonthlyContribution(Number(e.target.value)); userEdited(); }} />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <label className="label">Expected return (p.a.)</label>
-                  <div className="row-inline">
-                    <input
-                      className="number-input badge-like"
-                      type="number"
-                      min={0}
-                      max={20}
-                      step={0.1}
-                      value={expectedReturn}
-                      onChange={(e) => { setExpectedReturn(Number(e.target.value || 0)); userEdited(); }}
-                    />
-                    <input className="mil-input range-input" type="range" min={0} max={20} step={0.1} value={expectedReturn} onChange={(e) => { setExpectedReturn(Number(e.target.value)); userEdited(); }} />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <label className="label">Inflation (p.a.)</label>
-                  <div className="row-inline">
-                    <input
-                      className="number-input badge-like"
-                      type="number"
-                      min={0}
-                      max={12}
-                      step={0.1}
-                      value={inflation}
-                      onChange={(e) => { setInflation(Number(e.target.value || 0)); userEdited(); }}
-                    />
-                    <input className="mil-input range-input" type="range" min={0} max={12} step={0.1} value={inflation} onChange={(e) => { setInflation(Number(e.target.value)); userEdited(); }} />
-                  </div>
-                </div>
-
-                {/* Tab-specific inputs */}
-                {tab === "goal" ? (
-                  <div className="form-row">
-                    <label className="label">Target retirement corpus</label>
-                    <div className="row-inline">
-                      <input
-                        className="pill-input badge-like"
-                        type="number"
-                        min={0}
-                        step={50000}
-                        value={targetCorpus}
-                        onChange={(e) => { setTargetCorpus(Number(e.target.value || 0)); userEdited(); }}
-                      />
-                      <input className="mil-input range-input" type="range" min={0} max={200000000} step={50000} value={targetCorpus} onChange={(e) => { setTargetCorpus(Number(e.target.value)); userEdited(); }} />
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="form-row">
-                      <label className="label">Desired monthly retirement income</label>
-                      <div className="row-inline">
-                        <input
-                          className="pill-input badge-like"
-                          type="number"
-                          min={0}
-                          step={1000}
-                          value={desiredMonthlyIncome}
-                          onChange={(e) => { setDesiredMonthlyIncome(Number(e.target.value || 0)); userEdited(); }}
-                        />
-                        <input className="mil-input range-input" type="range" min={0} max={500000} step={1000} value={desiredMonthlyIncome} onChange={(e) => { setDesiredMonthlyIncome(Number(e.target.value)); userEdited(); }} />
-                      </div>
-                    </div>
-
-                    <div className="form-row">
-                      <label className="label">Safe withdrawal rate (%)</label>
-                      <div className="row-inline">
-                        <input
-                          className="number-input badge-like"
-                          type="number"
-                          min={1}
-                          max={10}
-                          step={0.1}
-                          value={safeWithdraw}
-                          onChange={(e) => { setSafeWithdraw(Number(e.target.value || 0)); userEdited(); }}
-                        />
-                        <input className="mil-input range-input" type="range" min={1} max={10} step={0.1} value={safeWithdraw} onChange={(e) => { setSafeWithdraw(Number(e.target.value)); userEdited(); }} />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="presets">
-                  <button
-                    className={`preset ${selectedPreset === "conservative" ? "active" : ""}`}
-                    onClick={() => applyPreset("conservative")}
-                  >
-                    Conservative
-                  </button>
-                  <button
-                    className={`preset ${selectedPreset === "balanced" ? "active" : ""}`}
-                    onClick={() => applyPreset("balanced")}
-                  >
-                    Balanced
-                  </button>
-                  <button
-                    className={`preset ${selectedPreset === "aggressive" ? "active" : ""}`}
-                    onClick={() => applyPreset("aggressive")}
-                  >
-                    Aggressive
-                  </button>
-                </div>
-
-                <div className="summary-small">
-                  <div>
-                    <div className="small-label">Projected corpus</div>
-                    <div className="small-val">{inr(finalBalance)}</div>
-                  </div>
-                  <div>
-                    <div className="small-label">Total invested</div>
-                    <div className="small-val">{inr(investedTotal)}</div>
-                  </div>
-                  <div>
-                    <div className="small-label">Est. returns</div>
-                    <div className="small-val">{inr(estReturns)}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* right: donut + mini area */}
-            <div className="col-md-5">
-              <div className="card-chart">
-                <div className="donut-wrap" style={{ width: "100%", height: 260 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={donutDataGoal} innerRadius={70} outerRadius={100} dataKey="value" startAngle={90} endAngle={-270} paddingAngle={2}>
-                        {donutDataGoal.map((entry, idx) => (
-                          <Cell key={`c-${idx}`} fill={[INVESTED_COLOR, RETURNS_COLOR][idx % 2]} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-
-                <div className="donut-legend">
-                  <div className="legend-row">
-                    <span className="legend-swatch" style={{ background: INVESTED_COLOR }} />
-                    <span className="legend-label">Invested amount</span>
-                  </div>
-                  <div className="legend-row">
-                    <span className="legend-swatch" style={{ background: RETURNS_COLOR }} />
-                    <span className="legend-label">Est. returns</span>
-                  </div>
-                </div>
-
-                <div className="mini-area">
-                  <ResponsiveContainer width="100%" height={140}>
-                    <AreaChart data={chartData} margin={{ top: 6, right: 6, left: 0, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0%" stopColor={BRAND_A} stopOpacity={0.85} />
-                          <stop offset="100%" stopColor={BRAND_B} stopOpacity={0.08} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                      <Tooltip formatter={(v) => inr(v)} />
-                      <Area type="monotone" dataKey="value" stroke={BRAND_A} fill="url(#g1)" strokeWidth={2} />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="goal-block" style={{ marginTop: 12 }}>
-                {tab === "goal" ? (
-                  <div>
-                    <div className="small-label">Remaining to reach target</div>
-                    <div style={{ fontWeight: 700, fontSize: 18, marginTop: 6 }}>{inr(remainingToGoal)}</div>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="small-label">Required corpus (SW %{safeWithdraw})</div>
-                    <div style={{ fontWeight: 700, fontSize: 18, marginTop: 6 }}>{inr(requiredCorpusFromIncome)}</div>
-                    <div className="small-label" style={{ marginTop: 8 }}>Remaining to reach that corpus</div>
-                    <div style={{ fontWeight: 700, fontSize: 16, marginTop: 6 }}>{inr(remainingToIncomeGoal)}</div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* yearly table */}
-            <div className="col-xl-12 mil-mt-20">
-              <div className="table-responsive">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Year</th>
-                      <th>Invested</th>
-                      <th>Est. returns</th>
-                      <th>Balance</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {projection.map((r) => (
-                      <tr key={r.year}>
-                        <td>{r.year}</td>
-                        <td>{inr(r.invested)}</td>
-                        <td>{inr(r.returns)}</td>
-                        <td>{inr(r.balance)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
+const InfoTooltip = ({ text }) => (
+    <div className="relative flex items-center group">
+        <Info className="h-4 w-4 text-gray-400 ml-2 cursor-pointer" />
+        <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 w-64 p-3 bg-white border border-gray-200 rounded-lg shadow-xl text-xs text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+            {text}
         </div>
-      </div>
+    </div>
+);
 
-      {/* styles (kept same visual language as your SIP/Lumpsum page) */}
-      <style jsx>{`
-        .tab-row { display:flex; gap:12px; align-items:center; margin-bottom:14px; }
-        .tab { background:#f6faf8; border:0; padding:8px 14px; border-radius:999px; color:#7a8b86; font-weight:600; cursor:pointer; }
-        .tab.active { background:#e9fff5; color:${ACCENT}; box-shadow: inset 0 0 0 1px rgba(6,167,119,0.08); }
+const InputField = ({ label, type = "number", value, onChange, name, info }) => (
+    <div style={{ marginBottom: '10px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', fontWeight: '500', color: 'rgb(0 44 81)', marginBottom: '3px' }}>{label}{info && <InfoTooltip text={info} />}</label>
+        <input type={type} name={name} value={value} onChange={onChange} style={{ width: '100%', backgroundColor: '#F3F7FD', border: '1px solid #E7F1FA', color: 'rgb(0 44 81)', borderRadius: '5px', padding: '6px 10px', fontSize: '0.8125rem', outline: 'none', height: 'auto', fontFamily: 'inherit' }} />
+    </div>
+);
 
-        .card-form { background:#fff; padding:22px; border-radius:12px; border:1px solid #eef2f3; }
-        .card-chart { background:#fff; padding:18px; border-radius:12px; border:1px solid #eef2f3; display:flex; flex-direction:column; align-items:center; gap:8px; }
+const InputSlider = ({ label, value, onChange, name, min, max, step, info, unit="%" }) => (
+    <div style={{ marginBottom: '10px' }}>
+        <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', fontWeight: '500', color: 'rgb(0 44 81)', marginBottom: '6px' }}>
+            <span>{label} {info && <InfoTooltip text={info} />}</span>
+            <span style={{ color: '#1F9A32', fontWeight: '600', fontSize: '0.75rem' }}>{value}{unit}</span>
+        </label>
+        <input type="range" name={name} value={value} onChange={onChange} min={min} max={max} step={step} 
+            style={{ width: '100%', height: '5px', backgroundColor: '#E7F1FA', borderRadius: '6px', appearance: 'slider-horizontal', cursor: 'pointer', accentColor: '#1F9A32', border: 'none' }} />
+    </div>
+);
 
-        .form-row { margin-bottom:18px; }
-        .label { font-size:14px; color:#2f3a45; margin-bottom:8px; display:block; }
+const SelectField = ({ label, value, onChange, name, children, info }) => (
+    <div style={{ marginBottom: '10px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.75rem', fontWeight: '500', color: 'rgb(0 44 81)', marginBottom: '3px' }}>{label}{info && <InfoTooltip text={info} />}</label>
+        <select name={name} value={value} onChange={onChange} style={{ display: 'block', width: '100%', padding: '6px 32px 6px 10px', fontSize: '0.8125rem', backgroundColor: '#F3F7FD', border: '1px solid #E7F1FA', color: 'rgb(0 44 81)', outline: 'none', borderRadius: '5px', height: 'auto', fontFamily: 'inherit' }}>
+            {children}
+        </select>
+    </div>
+);
 
-        .row-inline { display:flex; align-items:center; gap:12px; width:100%; }
+const SummaryCard = ({ title, value, icon, color, subtext }) => {
+    const colorMap = {
+        'bg-blue-100': '#E7F1FA',
+        'bg-green-100': '#D4F4DD',
+        'bg-orange-100': '#FFE5CC',
+        'bg-indigo-100': '#CFE1F1',
+        'bg-yellow-100': '#FFF4CC'
+    };
+    return (
+        <div style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'flex-start', gap: '12px', border: '1px solid #E7F1FA' }}>
+            <div style={{ padding: window.innerWidth < 768 ? '8px' : '10px', borderRadius: '10px', backgroundColor: colorMap[color] || '#E7F1FA' }}>{icon}</div>
+            <div>
+                <p style={{ fontSize: '0.75rem', color: 'rgb(146 173 203)', fontWeight: '500' }}>{title}</p>
+                <p style={{ fontSize: window.innerWidth < 768 ? '1.125rem' : '1.25rem', fontWeight: 'bold', color: 'rgb(0 44 81)', marginTop: '3px' }}>{value}</p>
+                {subtext && <p style={{ fontSize: '0.6875rem', color: 'rgb(137, 141, 150)', marginTop: '3px' }}>{subtext}</p>}
+            </div>
+        </div>
+    );
+};
 
-        .val-badge { background:#ecfff6; color:${ACCENT}; font-weight:700; padding:8px 12px; border-radius:6px; min-width:140px; flex:0 0 140px; text-align:center; box-shadow: 0 2px 6px rgba(6,167,119,0.06); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-        .val-badge.percent { min-width:90px; flex:0 0 90px; }
-        .val-badge.years { min-width:70px; flex:0 0 70px; }
+const CustomTooltipContent = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        const data = payload[0].payload;
+        return (
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(4px)', border: '1px solid #E7F1FA', padding: '12px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', fontSize: '0.8125rem' }}>
+                <p style={{ fontWeight: 'bold', color: 'rgb(0 44 81)', marginBottom: '6px' }}>{`Year: ${label} (Age: ${data.age})`}</p>
+                <p style={{ color: '#1F9A32', marginBottom: '2px' }}>{`Best Case (90th %): ${formatCurrency(data.p90)}`}</p>
+                <p style={{ color: '#92ADCB', marginBottom: '2px' }}>{`Median Case (50th %): ${formatCurrency(data.p50)}`}</p>
+                <p style={{ color: '#FF8C42', marginBottom: '0' }}>{`Worst Case (10th %): ${formatCurrency(data.p10)}`}</p>
+            </div>
+        );
+    }
+    return null;
+};
 
-        /* unified badge-like small boxes (pill, small number, badges) */
-        .badge-like {
-          background: #ecfff6;
-          color: ${ACCENT_DARK};
-          font-weight: 700;
-          border-radius: 10px;
-          box-shadow: 0 6px 20px rgba(6,167,119,0.07);
-          border: 1px solid rgba(6,167,119,0.06);
+
+// --- MAIN APP COMPONENT ---
+export default function RetirementCalculatorPage() {
+    const [inputs, setInputs] = useState({
+        currentAge: 35, retirementAge: 65, lifeExpectancy: 95,
+        annualIncome: 80000, salaryGrowth: 3,
+        currentSavings: { taxable: 50000, taxDeferred: 150000, rothIra: 25000 },
+        savingsRate: 15, retirementExpenses: 50000, inflationRate: 3,
+        investments: { expectedReturn: 7, volatility: 15 },
+        lifeEvents: [{ age: 45, description: "Child's College", amount: -50000 }, { age: 55, description: "Inheritance", amount: 100000 }],
+        socialSecurityBenefit: 25000, socialSecurityAge: 67,
+        withdrawalStrategy: 'inflationAdjusted',
+        stressTest: { enabled: false, age: 65, dropPercent: 30 }
+    });
+
+    const [results, setResults] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    // Load PDF libraries on component mount
+    useEffect(() => {
+        Promise.all([
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
+            loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+        ]).catch(err => console.error("Failed to load PDF libraries", err));
+        calculate();
+    }, []);
+
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        const parsedValue = type === 'number' ? parseFloat(value) : (type === 'checkbox' ? checked : value);
+        const keys = name.split('.');
+
+        if (keys.length > 1) {
+            setInputs(prev => {
+                const newState = {...prev};
+                let current = newState;
+                for (let i = 0; i < keys.length - 1; i++) current = current[keys[i]];
+                current[keys[keys.length - 1]] = parsedValue;
+                return newState;
+            });
+        } else {
+            setInputs(prev => ({ ...prev, [name]: parsedValue }));
+        }
+    };
+    
+    const handleEventChange = (index, field, value) => {
+        const newEvents = [...inputs.lifeEvents];
+        newEvents[index][field] = field === 'amount' ? parseFloat(value) : value;
+        setInputs(prev => ({...prev, lifeEvents: newEvents}));
+    };
+    
+    const addEvent = () => setInputs(prev => ({...prev, lifeEvents: [...prev.lifeEvents, { age: 50, description: 'New Event', amount: 0}]}));
+    const removeEvent = (index) => setInputs(prev => ({...prev, lifeEvents: inputs.lifeEvents.filter((_, i) => i !== index)}));
+
+    const calculate = () => {
+        setIsLoading(true);
+        setTimeout(() => {
+            const res = runMonteCarloSimulation(inputs);
+            setResults(res);
+            setIsLoading(false);
+        }, 500);
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!window.jspdf || !window.html2canvas) {
+            alert("PDF generation library is not loaded yet. Please try again in a moment.");
+            return;
+        }
+        setIsDownloading(true);
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let y = 15;
+
+        // --- Helper function to add text and manage y-position ---
+        const addText = (text, options = {}) => {
+            if (y > 280) { // Page break
+                doc.addPage();
+                y = 15;
+            }
+            doc.text(text, options.x || 15, y, options);
+            y += (options.size || 10) / 2 + 3;
+        };
+
+        const addTitle = (text) => {
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            addText(text);
+            y += 4;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
         }
 
-        /* pill numeric input for currency fields */
-        .pill-input {
-          min-width: 160px;
-          padding: 12px 18px;
-          border-radius: 14px;
-          background: #ecfff6;
-          color: ${ACCENT};
-          font-weight: 700;
-          font-size: 16px;
-          text-align: center;
-          box-sizing: border-box;
-          margin-right: 16px;
-          -moz-appearance: textfield;
-          appearance: textfield;
-          border: none;
-        }
-        .pill-input:focus {
-          outline: none;
-          box-shadow: 0 6px 20px rgba(6,167,119,0.16);
-        }
+        // --- PDF Content ---
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        addText('Retirement Plan Summary Report', {align: 'center', x: 105});
+        y+=5;
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
 
-        /* small numeric boxes */
-        .number-input {
-          width:110px;
-          padding:8px 10px;
-          border-radius:10px;
-          border:1px solid rgba(6,167,119,0.06);
-          text-align:center;
-          font-weight:700;
-          background:#ecfff6;
-          color:${ACCENT_DARK};
+        addTitle("Summary Results");
+        addText(`Success Probability: ${Math.round(results.successProbability)}%`);
+        addText(`Median Nest Egg at Retirement: ${formatCurrency(results.medianNestEgg)}`);
+        y+=5;
+        
+        addTitle("Your Inputs");
+        const inputData = {
+            "Vitals": { "Current Age": inputs.currentAge, "Retirement Age": inputs.retirementAge, "Life Expectancy": inputs.lifeExpectancy },
+            "Income & Savings": { "Gross Annual Income": formatCurrency(inputs.annualIncome), "Salary Growth": `${inputs.salaryGrowth}%`, "Savings Rate": `${inputs.savingsRate}%` },
+            "Current Assets": { "Taxable": formatCurrency(inputs.currentSavings.taxable), "Tax-Deferred": formatCurrency(inputs.currentSavings.taxDeferred), "Roth/Tax-Free": formatCurrency(inputs.currentSavings.rothIra) },
+            "Retirement Goals": { "Annual Expenses": formatCurrency(inputs.retirementExpenses), "Assumed Inflation": `${inputs.inflationRate}%` },
+            "Investment Strategy": { "Avg. Annual Return": `${inputs.investments.expectedReturn}%`, "Volatility": `${inputs.investments.volatility}%` },
+            "Advanced Modeling": { "Annual Social Security": formatCurrency(inputs.socialSecurityBenefit), "Benefit Age": inputs.socialSecurityAge, "Withdrawal Strategy": inputs.withdrawalStrategy },
+        };
+        for (const section in inputData) {
+            addText(section, {size: 12});
+            for(const [key, value] of Object.entries(inputData[section])){
+                addText(`  • ${key}: ${value}`);
+            }
+            y+=2;
         }
 
-        input[type="range"].range-input {
-          -webkit-appearance: none;
-          appearance: none;
-          height: 6px;
-          width: 100%;
-          background: #e9e9e9;
-          border-radius: 999px;
-          outline: none;
-          flex: 1 1 auto; /* input fills remaining space */
+        addTitle("Life Events");
+        if(inputs.lifeEvents.length > 0) {
+            inputs.lifeEvents.forEach(event => {
+                addText(`  • Age ${event.age}: ${event.description} (${formatCurrency(event.amount)})`);
+            });
+        } else {
+            addText("  No life events entered.");
         }
-        input[type="range"].range-input::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance:none;
-          width:18px; height:18px; border-radius:50%; background:${ACCENT}; box-shadow:0 2px 6px rgba(7,181,137,0.25); margin-top:-6px;
+
+        // --- Add Charts as Images ---
+        doc.addPage();
+        y = 15;
+        addTitle("Charts & Visualizations");
+
+        try {
+            const chart1 = document.getElementById('portfolio-chart');
+            const canvas1 = await window.html2canvas(chart1, {backgroundColor: '#ffffff'});
+            const imgData1 = canvas1.toDataURL('image/png');
+            doc.addImage(imgData1, 'PNG', 15, y, 180, 100);
+            y += 110;
+
+            const chart2 = document.getElementById('savings-composition-chart');
+            const canvas2 = await window.html2canvas(chart2, {backgroundColor: '#ffffff'});
+            const imgData2 = canvas2.toDataURL('image/png');
+            doc.addImage(imgData2, 'PNG', 15, y, 180, 80);
+            y += 90;
+        } catch (error) {
+            console.error("Error capturing charts:", error);
+            addText("Could not render charts in PDF.", {color: 'red'});
         }
-        input[type="range"].range-input::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:${ACCENT}; border:none; }
 
-        .presets { display:flex; gap:10px; margin-top:6px; margin-bottom:12px; }
-        .preset { background:#f5fbf8; border-radius:8px; border:1px solid #e6f5ef; padding:8px 12px; color:${ACCENT}; cursor:pointer; font-weight:600; }
-        .preset.active { background:${ACCENT}; color:white; box-shadow: 0 6px 20px rgba(6,167,119,0.12); }
+        // --- Add Disclaimer ---
+        const disclaimer = "This calculator is intended for educational purposes only and does not constitute financial advice. The projections are based on the assumptions you provide and a Monte Carlo simulation of potential market outcomes. These results are hypothetical and may not reflect your actual retirement outcome. Please consult with a qualified financial advisor for personalized advice tailored to your specific situation.";
+        doc.addPage();
+        y = 15;
+        addTitle("Disclaimer");
+        const splitDisclaimer = doc.splitTextToSize(disclaimer, 180);
+        addText(splitDisclaimer);
+        
+        doc.save('Retirement_Plan_Report.pdf');
+        setIsDownloading(false);
+    };
 
-        .summary-small { display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:12px; align-items:center; margin-top:10px; }
-        .small-label { font-size:12px; color:#7b8790; }
-        .small-val { font-weight:700; font-size:16px; margin-top:6px; }
-        .cta-wrap { display:flex; align-items:center; }
-        .invest-btn { background: ${ACCENT}; color: white; border: none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; box-shadow: 0 8px 30px rgba(6,167,119,0.12); }
+    const totalCurrentSavings = useMemo(() => Object.values(inputs.currentSavings).reduce((sum, val) => sum + val, 0), [inputs.currentSavings]);
+    const savingsCompositionData = useMemo(() => ([
+        { name: 'Taxable', value: inputs.currentSavings.taxable },
+        { name: 'Tax-Deferred', value: inputs.currentSavings.taxDeferred },
+        { name: 'Roth IRA', value: inputs.currentSavings.rothIra },
+    ]), [inputs.currentSavings]);
+    const COLORS = ['#002C51', '#1F9A32', '#92ADCB']; // Navy, Green, Light Blue
 
-        .donut-legend { display:flex; flex-direction:column; gap:8px; width:100%; padding-left:14px; }
-        .legend-row { display:flex; gap:8px; align-items:center; }
-        .legend-swatch { width:18px; height:18px; border-radius:6px; display:inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
-        .legend-label { font-size:13px; color:#515b63; }
+    const analysis = useMemo(() => {
+        if (!results) return { message: "Run simulation to see analysis.", icon: <Info/>, color: "text-gray-500"};
+        if (results.successProbability > 85) return { message: "On Track. Your plan has a high probability of success.", icon: <CheckCircle2/>, color: "text-green-500"};
+        if (results.successProbability > 60) return { message: "Needs Attention. Your plan is moderately successful.", icon: <AlertTriangle/>, color: "text-amber-500"};
+        return { message: "High Risk. Your current plan has a low chance of success.", icon: <AlertTriangle/>, color: "text-red-500"};
+    }, [results]);
 
-        .mini-area { width:100%; margin-top:4px; }
+    const calculatorContent = (
+        <div style={{ backgroundColor: '#F3F7FD', color: 'rgb(0 44 81)', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', paddingTop: '120px' }}>
+            <aside style={{ width: window.innerWidth < 768 ? '100%' : '420px', backgroundColor: 'white', padding: window.innerWidth < 768 ? '16px' : '20px', display: 'flex', flexDirection: 'column', gap: '16px', borderRight: window.innerWidth < 768 ? 'none' : '1px solid #E7F1FA', borderBottom: window.innerWidth < 768 ? '1px solid #E7F1FA' : 'none', height: window.innerWidth < 768 ? 'auto' : 'calc(100vh - 120px)', position: window.innerWidth < 768 ? 'relative' : 'sticky', top: window.innerWidth < 768 ? '0' : '120px', overflowY: 'auto', overflowX: 'hidden' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                     <div style={{ padding: '6px', backgroundColor: '#E7F1FA', borderRadius: '6px' }}><BarChart2 style={{ height: '22px', width: '22px', color: '#002C51' }}/></div>
+                     <h1 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'rgb(0 44 81)' }}>Retirement Calculator</h1>
+                </div>
 
-        .table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-        .table th { background:#fafbfc; padding:12px 16px; text-align:left; color:#333; font-weight:700; border-bottom:1px solid #eef2f3; }
-        .table td { padding:12px 16px; border-bottom:1px solid #f1f4f6; color:#333; }
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {/* --- Input Sections --- */}
+                     <Section title="Vitals" icon={<Briefcase className="mr-2" style={{ color: '#002C51' }}/>}>
+                        <InputField label="Current Age" name="currentAge" value={inputs.currentAge} onChange={handleInputChange} />
+                        <InputField label="Retirement Age" name="retirementAge" value={inputs.retirementAge} onChange={handleInputChange} />
+                        <InputField label="Life Expectancy" name="lifeExpectancy" value={inputs.lifeExpectancy} onChange={handleInputChange} />
+                    </Section>
+                    
+                    <Section title="Income & Savings" icon={<DollarSign className="mr-2" style={{ color: '#002C51' }}/>}>
+                         <InputField label="Gross Annual Income" name="annualIncome" value={inputs.annualIncome} onChange={handleInputChange} info="Your current pre-tax annual salary." />
+                         <InputSlider label="Annual Salary Growth" name="salaryGrowth" value={inputs.salaryGrowth} onChange={handleInputChange} min="0" max="10" step="0.1" info="Expected average annual pay increase."/>
+                         <InputSlider label="Savings Rate" name="savingsRate" value={inputs.savingsRate} onChange={handleInputChange} min="0" max="50" step="1" info="Percentage of gross income you save annually."/>
+                    </Section>
+                    
+                    <Section title="Current Assets" icon={<Home className="mr-2" style={{ color: '#002C51' }}/>}>
+                        <InputField label="Taxable Account" name="currentSavings.taxable" value={inputs.currentSavings.taxable} onChange={handleInputChange} info="e.g., Brokerage accounts."/>
+                        <InputField label="Tax-Deferred" name="currentSavings.taxDeferred" value={inputs.currentSavings.taxDeferred} onChange={handleInputChange} info="e.g., 401(k), Traditional IRA."/>
+                        <InputField label="Roth / Tax-Free" name="currentSavings.rothIra" value={inputs.currentSavings.rothIra} onChange={handleInputChange} info="e.g., Roth IRA, Roth 401(k), HSA."/>
+                    </Section>
 
-        @media (max-width: 992px) {
-          .summary-small { grid-template-columns: 1fr 1fr; }
-          .card-chart { margin-top:14px; }
-          .val-badge { min-width:110px; flex:0 0 110px; }
-          .number-input { width:86px; }
-          .pill-input { min-width: 140px; padding: 10px 14px; font-size: 14px; margin-right: 10px; }
-        }
-      `}</style>
-    </PlaxLayout>
-  );
+                    <Section title="Retirement Goals" icon={<Target className="mr-2" style={{ color: '#002C51' }}/>}>
+                         <InputField label="Annual Expenses in Retirement" name="retirementExpenses" value={inputs.retirementExpenses} onChange={handleInputChange} info="Estimated annual spending in today's dollars."/>
+                         <InputSlider label="Assumed Inflation" name="inflationRate" value={inputs.inflationRate} onChange={handleInputChange} min="0" max="10" step="0.1" info="Long-term average inflation rate."/>
+                    </Section>
+
+                    <Section title="Investment Strategy" icon={<TrendingUp className="mr-2" style={{ color: '#002C51' }}/>}>
+                        <InputSlider label="Avg. Annual Return" name="investments.expectedReturn" value={inputs.investments.expectedReturn} onChange={handleInputChange} min="0" max="15" step="0.1" info="Your portfolio's estimated average annual growth."/>
+                        <InputSlider label="Portfolio Volatility" name="investments.volatility" value={inputs.investments.volatility} onChange={handleInputChange} min="0" max="30" step="0.5" info="Standard deviation. Higher means more risk and wider range of outcomes."/>
+                    </Section>
+                    
+                    <Section title="Advanced Modeling" icon={<SlidersHorizontal className="mr-2" style={{ color: '#002C51' }}/>}>
+                        <InputField label="Annual Social Security" name="socialSecurityBenefit" value={inputs.socialSecurityBenefit} onChange={handleInputChange} info="Annual benefit in today's dollars."/>
+                        <InputField label="Social Security Age" name="socialSecurityAge" value={inputs.socialSecurityAge} onChange={handleInputChange} info="Age you plan to start receiving benefits."/>
+                        <SelectField label="Withdrawal Strategy" name="withdrawalStrategy" value={inputs.withdrawalStrategy} onChange={handleInputChange} info="Method for taking money out in retirement.">
+                            <option value="inflationAdjusted">Inflation Adjusted Expenses</option>
+                            <option value="fourPercentRule">4% Rule</option>
+                        </SelectField>
+                         <div style={{ paddingTop: '12px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+                                <input type="checkbox" name="stressTest.enabled" checked={inputs.stressTest.enabled} onChange={handleInputChange} style={{ height: '20px', width: '20px', color: '#1F9A32', backgroundColor: '#F3F7FD', border: '1px solid #E7F1FA', borderRadius: '4px', cursor: 'pointer', accentColor: '#1F9A32' }}/>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'rgb(0 44 81)' }}>Enable Market Stress Test</span>
+                            </label>
+                            {inputs.stressTest.enabled && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px', paddingLeft: '12px', borderLeft: '2px solid #92ADCB' }}>
+                                    <InputField label="Age at Crash" name="stressTest.age" value={inputs.stressTest.age} onChange={handleInputChange} />
+                                    <InputSlider label="Market Drop" name="stressTest.dropPercent" value={inputs.stressTest.dropPercent} onChange={handleInputChange} min="10" max="90" step="1"/>
+                                </div>
+                            )}
+                        </div>
+                    </Section>
+
+                     <Section title="Life Events" icon={<LifeBuoy className="mr-2" style={{ color: '#002C51' }}/>}>
+                        {inputs.lifeEvents.map((event, index) => (
+                            <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 2fr auto', gap: '8px', alignItems: 'center' }}>
+                               <div><InputField label="Age" name={`event-age-${index}`} value={event.age} onChange={e => handleEventChange(index, 'age', e.target.value)} /></div>
+                               <div><InputField label="Description" type="text" name={`event-desc-${index}`} value={event.description} onChange={e => handleEventChange(index, 'description', e.target.value)} /></div>
+                               <div><InputField label="Amount" name={`event-amount-${index}`} value={event.amount} onChange={e => handleEventChange(index, 'amount', e.target.value)} /></div>
+                               <div style={{ paddingTop: '24px' }}><button onClick={() => removeEvent(index)} style={{ color: '#dc2626', fontSize: '1.5rem', fontWeight: 'bold', background: 'none', border: 'none', cursor: 'pointer', padding: '0 8px', fontFamily: 'inherit' }} onMouseEnter={(e) => e.target.style.color = '#991b1b'} onMouseLeave={(e) => e.target.style.color = '#dc2626'}>&times;</button></div>
+                            </div>
+                        ))}
+                        <button onClick={addEvent} style={{ width: '100%', fontSize: '0.875rem', padding: '8px 16px', backgroundColor: '#E7F1FA', color: '#002C51', borderRadius: '6px', border: 'none', fontWeight: '600', cursor: 'pointer', fontFamily: 'inherit' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#CFE1F1'} onMouseLeave={(e) => e.target.style.backgroundColor = '#E7F1FA'}>Add Event</button>
+                        <p style={{ fontSize: '0.75rem', color: 'rgb(137, 141, 150)', textAlign: 'center' }}>Use negative amounts for expenses.</p>
+                    </Section>
+                </div>
+
+                <button onClick={calculate} disabled={isLoading} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 14px', fontSize: '0.875rem', backgroundColor: isLoading ? 'rgb(137, 141, 150)' : '#1F9A32', color: 'white', fontWeight: '600', borderRadius: '6px', border: 'none', cursor: isLoading ? 'not-allowed' : 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', transition: 'all 0.3s ease', fontFamily: 'inherit' }} onMouseEnter={(e) => !isLoading && (e.target.style.backgroundColor = '#178A2C')} onMouseLeave={(e) => !isLoading && (e.target.style.backgroundColor = '#1F9A32')}>
+                    {isLoading ? (<> <svg style={{ animation: 'spin 1s linear infinite', marginLeft: '-4px', marginRight: '12px', height: '18px', width: '18px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }}></circle> <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style={{ opacity: 0.75 }} fill="currentColor"></path> </svg> Recalculating... </>) : (<> <ChevronsRight style={{ marginRight: '8px', height: '18px', width: '18px' }}/> Run Simulation </>)}
+                </button>
+            </aside>
+
+            <main style={{ flex: 1, padding: window.innerWidth < 768 ? '16px' : '24px', overflowY: 'auto', backgroundColor: '#F3F7FD' }}>
+                {isLoading && !results ? (<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><p style={{ fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem', color: 'rgb(137, 141, 150)' }}>Loading Initial Simulation...</p></div>) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: window.innerWidth < 768 ? '20px' : '28px', maxWidth: '1280px', margin: '0 auto' }}>
+                        <div style={{ display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', justifyContent: 'space-between', alignItems: window.innerWidth < 768 ? 'flex-start' : 'center', gap: window.innerWidth < 768 ? '12px' : '0' }}>
+                            <h1 style={{ fontSize: window.innerWidth < 768 ? '1.375rem' : '1.75rem', fontWeight: 'bold', color: 'rgb(0 44 81)' }}>Your Retirement Calculator</h1>
+                             <button onClick={handleDownloadPDF} disabled={isDownloading || !results} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: window.innerWidth < 768 ? '6px 12px' : '7px 14px', fontSize: window.innerWidth < 768 ? '0.8125rem' : '0.875rem', backgroundColor: isDownloading || !results ? 'rgb(137, 141, 150)' : '#1F9A32', color: 'white', fontWeight: '600', borderRadius: '6px', border: 'none', cursor: isDownloading || !results ? 'not-allowed' : 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', transition: 'all 0.3s ease', fontFamily: 'inherit' }} onMouseEnter={(e) => !isDownloading && !(!results) && (e.target.style.backgroundColor = '#178A2C')} onMouseLeave={(e) => !isDownloading && !(!results) && (e.target.style.backgroundColor = '#1F9A32')}>
+                                {isDownloading ? (<> <svg style={{ animation: 'spin 1s linear infinite', marginLeft: '-4px', marginRight: '8px', height: '16px', width: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }}></circle> <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style={{ opacity: 0.75 }} fill="currentColor"></path> </svg> Creating... </>) : (<> <Download style={{ marginRight: '6px', height: '16px', width: '16px' }}/> Download Report (PDF) </>)}
+                            </button>
+                        </div>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : window.innerWidth < 1024 ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: window.innerWidth < 768 ? '12px' : '16px' }}>
+                            <SummaryCard title="Success Probability" value={`${results ? Math.round(results.successProbability) : '...'}%`} icon={<Target style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#002C51' }}/>} color="bg-blue-100" subtext="Chance of not running out of money"/>
+                            <SummaryCard title="Median Nest Egg" value={results ? formatCurrency(results.medianNestEgg) : '...'} icon={<DollarSign style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#1F9A32' }}/>} color="bg-green-100" subtext={`At retirement (age ${inputs.retirementAge})`}/>
+                            <SummaryCard title="Median Worst Drawdown" value={results ? `${(results.medianWorstDrawdown * 100).toFixed(1)}%` : '...'} icon={<AlertTriangle style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#FF8C42' }}/>} color="bg-orange-100" subtext="Typical largest portfolio drop"/>
+                            <SummaryCard title="Total Current Savings" value={formatCurrency(totalCurrentSavings)} icon={<Briefcase style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#92ADCB' }}/>} color="bg-indigo-100" subtext="Across all accounts"/>
+                            <SummaryCard title="Retirement Years" value={`${inputs.lifeExpectancy - inputs.retirementAge} yrs`} icon={<Home style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#FFB627' }}/>} color="bg-yellow-100" subtext={`From age ${inputs.retirementAge} to ${inputs.lifeExpectancy}`}/>
+                        </div>
+
+                        <div id="portfolio-chart" style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>
+                             <h2 style={{ fontSize: window.innerWidth < 768 ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: window.innerWidth < 768 ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Portfolio Value Over Time (Monte Carlo Simulation)</h2>
+                             <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 280 : 360}>
+                                <AreaChart data={results?.chartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#E7F1FA" />
+                                    <XAxis dataKey="age" stroke="#92ADCB" tick={{fill: 'rgb(146 173 203)'}} name="Age"/>
+                                    <YAxis stroke="#92ADCB" tickFormatter={formatCurrency} tick={{fill: 'rgb(146 173 203)'}} />
+                                    <Tooltip content={<CustomTooltipContent />} />
+                                    <Legend />
+                                    <defs>
+                                        <linearGradient id="colorP50" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#92ADCB" stopOpacity={0.3}/>
+                                            <stop offset="95%" stopColor="#92ADCB" stopOpacity={0}/>
+                                        </linearGradient>
+                                        <linearGradient id="colorP10" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#FF8C42" stopOpacity={0.3}/>
+                                            <stop offset="95%" stopColor="#FF8C42" stopOpacity={0}/>
+                                        </linearGradient>
+                                    </defs>
+                                    <Area type="monotone" dataKey="p90" stroke="#1F9A32" fill="none" name="Best Case (90th %)" dot={false} strokeWidth={2}/>
+                                    <Area type="monotone" dataKey="p50" stroke="#92ADCB" fill="url(#colorP50)" name="Median (50th %)" dot={false} strokeWidth={2}/>
+                                    <Area type="monotone" dataKey="p10" stroke="#FF8C42" fill="url(#colorP10)" name="Worst Case (10th %)" dot={false} strokeWidth={2}/>
+                                </AreaChart>
+                             </ResponsiveContainer>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: window.innerWidth < 768 ? '12px' : '16px' }}>
+                            <div style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                                <h2 style={{ fontSize: window.innerWidth < 768 ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: window.innerWidth < 768 ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Plan Analysis</h2>
+                                <div style={{ height: window.innerWidth < 768 ? '72px' : '80px', width: window.innerWidth < 768 ? '72px' : '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: analysis.color === 'text-green-500' ? '#D4F4DD' : analysis.color === 'text-amber-500' ? '#FFF4CC' : analysis.color === 'text-red-500' ? '#FFE5E5' : '#E7F1FA', marginBottom: window.innerWidth < 768 ? '10px' : '12px' }}>
+                                   {React.cloneElement(analysis.icon, {style: { height: window.innerWidth < 768 ? '36px' : '40px', width: window.innerWidth < 768 ? '36px' : '40px', color: analysis.color === 'text-green-500' ? '#1F9A32' : analysis.color === 'text-amber-500' ? '#FFB627' : analysis.color === 'text-red-500' ? '#dc2626' : 'rgb(137, 141, 150)' }})}
+                                </div>
+                                <p style={{ fontSize: window.innerWidth < 768 ? '0.875rem' : '0.9375rem', fontWeight: '500', color: analysis.color === 'text-green-500' ? '#1F9A32' : analysis.color === 'text-amber-500' ? '#FFB627' : analysis.color === 'text-red-500' ? '#dc2626' : 'rgb(137, 141, 150)' }}>{analysis.message}</p>
+                                <p style={{ fontSize: '0.75rem', color: 'rgb(146 173 203)', marginTop: '6px' }}>Based on 1,000 simulations of market conditions.</p>
+                            </div>
+
+                             <div id="savings-composition-chart" style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>
+                                 <h2 style={{ fontSize: window.innerWidth < 768 ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: window.innerWidth < 768 ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Current Savings Composition</h2>
+                                 <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 260 : 280}>
+                                    <PieChart>
+                                        <Pie data={savingsCompositionData} cx="50%" cy="45%" labelLine={false}
+                                             label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                                                const RADIAN = Math.PI / 180;
+                                                const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+                                                const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                                                const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                                                return (<text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '0.75rem', fontWeight: '600' }}>{`${(percent * 100).toFixed(0)}%`}</text>);
+                                              }}
+                                             outerRadius={window.innerWidth < 768 ? 75 : 90} innerRadius={window.innerWidth < 768 ? 35 : 45} fill="#8884d8" dataKey="value" paddingAngle={5}>
+                                            {savingsCompositionData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                                        </Pie>
+                                        <Tooltip formatter={(value) => formatCurrency(value)}/>
+                                        <Legend />
+                                    </PieChart>
+                                 </ResponsiveContainer>
+                            </div>
+                        </div>
+                        
+                        <p style={{ fontSize: '0.6875rem', color: 'rgb(137, 141, 150)', marginTop: window.innerWidth < 768 ? '16px' : '20px', textAlign: 'center', maxWidth: '896px', marginLeft: 'auto', marginRight: 'auto', lineHeight: '1.5' }}>
+                            This calculator is intended for educational purposes only and does not constitute financial advice. The projections are based on the assumptions you provide and a Monte Carlo simulation of potential market outcomes. These results are hypothetical and may not reflect your actual retirement outcome. Please consult with a qualified financial advisor for personalized advice tailored to your specific situation.
+                        </p>
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+
+    return (
+        <PlaxLayout>
+            {calculatorContent}
+        </PlaxLayout>
+    );
 }
+
+// A helper component to create styled sections in the sidebar
+const Section = ({ title, icon, children }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: 'rgba(231, 241, 250, 0.3)', padding: '12px', borderRadius: '10px', border: '1px solid #E7F1FA' }}>
+        <h2 style={{ fontSize: '0.875rem', fontWeight: '600', display: 'flex', alignItems: 'center', color: 'rgb(0 44 81)' }}>{icon}{title}</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {children}
+        </div>
+    </div>
+);
+

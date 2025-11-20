@@ -97,10 +97,18 @@ const InvestmentAdvisoryPage = () => {
         
         .investment-advisory-section .service-list li {
           position: relative;
-          padding-left: 28px;
-          margin-bottom: 10px;
+          padding-left: 24px;
+          margin-bottom: 8px;
           font-size: 0.875rem;
           line-height: 1.5;
+        }
+        
+        @media (max-width: 768px) {
+          .investment-advisory-section .service-list li {
+            padding-left: 22px;
+            margin-bottom: 6px;
+            font-size: 0.8125rem;
+          }
         }
         
         .investment-advisory-section .service-list li::before {
@@ -110,6 +118,13 @@ const InvestmentAdvisoryPage = () => {
           top: 1px;
           color: #1F9A32;
           font-weight: 600;
+          font-size: 0.875rem;
+        }
+        
+        @media (max-width: 768px) {
+          .investment-advisory-section .service-list li::before {
+            font-size: 0.75rem;
+          }
         }
         
         .investment-advisory-section .detail-page {
@@ -317,31 +332,31 @@ const InvestmentAdvisoryPage = () => {
         <div id="router-view">
           {/* Main Pricing Page */}
           {currentView === 'main' && (
-            <main id="page-main" style={{ maxWidth: '1400px', margin: '0 auto', padding: '1rem 2rem 3rem' }}>
+            <main id="page-main" style={{ maxWidth: '1400px', margin: '0 auto', padding: window.innerWidth < 768 ? '1rem 1rem 2rem' : '1rem 2rem 3rem' }}>
               {/* Hero Section */}
               <section className="text-center mx-auto mb-8" style={{ maxWidth: '1000px', padding: '0 0 1rem' }}>
-                <h1 className="font-display" style={{ fontSize: '1.75rem', fontWeight: '700', color: '#111827', marginBottom: '1rem', marginTop: '2rem', lineHeight: '1.3' }}>
+                <h1 className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.25rem' : '1.75rem', fontWeight: '700', color: '#111827', marginBottom: '1rem', marginTop: window.innerWidth < 768 ? '1rem' : '2rem', lineHeight: '1.3' }}>
                   "Every Rupee You Earn Deserves a Clear Plan and a Confident Future."
                 </h1>
-                <p style={{ fontSize: '0.9375rem', color: '#6b7280', marginBottom: '0.75rem', lineHeight: '1.5' }}>
+                <p style={{ fontSize: window.innerWidth < 768 ? '0.875rem' : '0.9375rem', color: '#6b7280', marginBottom: '0.75rem', lineHeight: '1.5' }}>
                   At Growsin, we believe financial planning is more than charts and calculations — it's about creating a meaningful, sustainable life. We offer unbiased, research-backed investment guidance that evolves with your needs, so you're always in control of your financial journey.
                 </p>
-                <p style={{ fontSize: '0.8125rem', fontWeight: '600', color: '#9ca3af', letterSpacing: '0.05em', marginTop: '1rem', marginBottom: '2rem' }}>
+                <p style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', color: '#9ca3af', letterSpacing: '0.05em', marginTop: '1rem', marginBottom: window.innerWidth < 768 ? '1.5rem' : '2rem' }}>
                   SEBI Registered | Fee-Only Advice | Personalized Plans | Backed by Research and Ethics
                 </p>
               </section>
 
               {/* Pricing & Services Section */}
               <section id="pricing" style={{ overflow: 'visible' }}>
-                <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', overflow: 'visible' }}>
+                <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 1024 ? '1fr' : 'repeat(3, 1fr)', gap: window.innerWidth < 768 ? '1rem' : '1.5rem', overflow: 'visible' }}>
 
                   {/* Column 1: Comprehensive Financial Planning */}
-                  <div className="pricing-column" style={{ padding: '1.75rem', background: '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', borderRadius: '1rem', overflow: 'visible' }}>
-                    <h2 className="font-display" style={{ fontSize: '1.375rem', fontWeight: '700', color: '#111827' }}>Comprehensive Planning</h2>
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>A complete financial roadmap for individuals and families.</p>
+                  <div className="pricing-column" style={{ padding: window.innerWidth < 768 ? '1.25rem' : '1.75rem', background: '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', borderRadius: '1rem', overflow: 'visible' }}>
+                    <h2 className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.125rem' : '1.375rem', fontWeight: '700', color: '#111827' }}>Comprehensive Planning</h2>
+                    <p style={{ marginTop: '0.5rem', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', color: '#6b7280' }}>A complete financial roadmap for individuals and families.</p>
                     <div style={{ marginTop: '1.25rem' }}>
-                      <p className="font-display" style={{ fontSize: '2.25rem', fontWeight: '700', color: '#111827' }}>₹34,999</p>
-                      <p style={{ fontSize: '0.8125rem', fontWeight: '500', color: '#9ca3af' }}>One-time fee</p>
+                      <p className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.875rem' : '2.25rem', fontWeight: '700', color: '#111827' }}>₹34,999</p>
+                      <p style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '500', color: '#9ca3af' }}>One-time fee</p>
                     </div>
                     <div style={{ margin: '1.5rem 0', height: '1px', backgroundColor: '#e5e7eb' }}></div>
                     <div style={{ flexGrow: 1, color: '#4b5563' }} className="service-list">
@@ -354,6 +369,13 @@ const InvestmentAdvisoryPage = () => {
                         <li>Retirement & Pension Planning</li>
                         <li>Debt & Credit Advisory</li>
                       </ul>
+                      <ul>
+                        <li>₹34,999 (one-time fee) <br />
+                        This includes a complete, end-to-end financial plan with full support for the first month. <br />
+                        Ongoing Advisory (Optional) <br />
+If you’d like continued monthly guidance, monitoring, and plan updates after the first month, ongoing advisory is available at:
+₹2,499 per month, billed for a 6-month cycle.</li>
+                      </ul>
                     </div>
                     <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <a href="#plan-1" onClick={(e) => handleNavClick('plan-1', e)} className="cta-button" style={{ padding: '0.625rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#1f2937', borderRadius: '0.5rem' }}>View Details</a>
@@ -362,20 +384,20 @@ const InvestmentAdvisoryPage = () => {
                   </div>
 
                   {/* Column 2: Exclusive Wealth Management */}
-                  <div className="pricing-column featured" style={{ padding: '2rem', background: 'linear-gradient(to bottom, #f0fdf4, #ffffff)', border: '2px solid #1F9A32', boxShadow: '0 12px 40px rgba(31, 154, 50, 0.2)', transform: 'scale(1.03)', borderRadius: '1rem', overflow: 'visible', position: 'relative' }}>
+                  <div className="pricing-column featured" style={{ padding: window.innerWidth < 768 ? '1.5rem' : '2rem', background: 'linear-gradient(to bottom, #f0fdf4, #ffffff)', border: '2px solid #1F9A32', boxShadow: '0 12px 40px rgba(31, 154, 50, 0.2)', transform: window.innerWidth < 1024 ? 'scale(1)' : 'scale(1.03)', borderRadius: '1rem', overflow: 'visible', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, boxShadow: '0 2px 8px rgba(31, 154, 50, 0.3)' }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', fontWeight: '600', letterSpacing: '0.025em', color: 'white', borderRadius: '9999px', padding: '4px 16px', fontSize: '0.75rem', background: 'linear-gradient(135deg, #1F9A32, #16a34a)' }}>Most Popular</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', fontWeight: '600', letterSpacing: '0.025em', color: 'white', borderRadius: '9999px', padding: window.innerWidth < 768 ? '3px 12px' : '4px 16px', fontSize: window.innerWidth < 768 ? '0.6875rem' : '0.75rem', background: 'linear-gradient(135deg, #1F9A32, #16a34a)' }}>Most Popular</span>
                     </div>
-                    <h2 className="font-display" style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>Exclusive Wealth Management</h2>
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>Bespoke strategies for high-net-worth clients.</p>
-                    <div style={{ marginTop: '1.5rem' }}>
-                      <p className="font-display" style={{ fontSize: '2.5rem', fontWeight: '700', color: '#111827' }}>Customized</p>
-                      <p style={{ fontSize: '0.875rem', fontWeight: '500', color: '#9ca3af' }}>Preferred for &gt; ₹1 Cr Net Worth</p>
+                    <h2 className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.125rem' : '1.5rem', fontWeight: '700', color: '#111827' }}>Exclusive Wealth Management</h2>
+                    <p style={{ marginTop: '0.5rem', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem', color: '#6b7280' }}>Bespoke strategies for high-net-worth clients.</p>
+                    <div style={{ marginTop: window.innerWidth < 768 ? '1rem' : '1.5rem' }}>
+                      <p className="font-display" style={{ fontSize: window.innerWidth < 768 ? '2rem' : '2.5rem', fontWeight: '700', color: '#111827' }}>Customized</p>
+                      <p style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.875rem', fontWeight: '500', color: '#9ca3af' }}>Preferred for &gt; ₹1 Cr Net Worth</p>
                     </div>
-                    <div style={{ margin: '1.5rem 0', height: '1px', backgroundColor: '#e5e7eb' }}></div>
+                    <div style={{ margin: window.innerWidth < 768 ? '1rem 0' : '1.5rem 0', height: '1px', backgroundColor: '#e5e7eb' }}></div>
                     <div style={{ flexGrow: 1, color: '#4b5563' }} className="service-list">
-                      <h3 style={{ fontWeight: '600', marginBottom: '0.875rem', color: '#111827', fontSize: '0.8125rem' }}>Includes all Comprehensive services, plus:</h3>
-                      <ul>
+                      <h3 style={{ fontWeight: '600', marginBottom: '0.875rem', color: '#111827', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem' }}>Includes all Comprehensive services, plus:</h3>
+                      <ul style={{ fontSize: window.innerWidth < 768 ? '0.8125rem' : '0.875rem' }}>
                         <li>Strategic Wealth Structuring</li>
                         <li>Tactical Capital Growth & Investment</li>
                         <li>Global Diversification & Offshore Planning</li>
@@ -385,33 +407,33 @@ const InvestmentAdvisoryPage = () => {
                         <li>Lifestyle, Concierge & Philanthropy</li>
                       </ul>
                     </div>
-                    <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                      <a href="#plan-2" onClick={(e) => handleNavClick('plan-2', e)} className="cta-button" style={{ padding: '0.625rem', fontSize: '0.8125rem', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#1f2937', borderRadius: '0.5rem' }}>View Details</a>
-                      <button className="cta-button" style={{ padding: '0.625rem', fontSize: '0.8125rem', fontWeight: '600', background: '#1F9A32', color: 'white', borderRadius: '0.5rem', border: 'none' }}>Subscribe</button>
+                    <div style={{ marginTop: window.innerWidth < 768 ? '1rem' : '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <a href="#plan-2" onClick={(e) => handleNavClick('plan-2', e)} className="cta-button" style={{ padding: window.innerWidth < 768 ? '0.5rem' : '0.625rem', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#1f2937', borderRadius: '0.5rem' }}>View Details</a>
+                      <button className="cta-button" style={{ padding: window.innerWidth < 768 ? '0.5rem' : '0.625rem', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', background: '#1F9A32', color: 'white', borderRadius: '0.5rem', border: 'none' }}>Subscribe</button>
                     </div>
                   </div>
 
                   {/* Column 3: Portfolio Rebalancing */}
-                  <div className="pricing-column" style={{ padding: '1.75rem', background: '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', borderRadius: '1rem', overflow: 'visible' }}>
-                    <h2 className="font-display" style={{ fontSize: '1.375rem', fontWeight: '700', color: '#111827' }}>Portfolio Rebalancing</h2>
-                    <p style={{ marginTop: '0.5rem', fontSize: '0.8125rem', color: '#6b7280' }}>A one-time service to align your portfolio.</p>
+                  <div className="pricing-column" style={{ padding: window.innerWidth < 768 ? '1.25rem' : '1.75rem', background: '#ffffff', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)', borderRadius: '1rem', overflow: 'visible' }}>
+                    <h2 className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.125rem' : '1.375rem', fontWeight: '700', color: '#111827' }}>Portfolio Rebalancing</h2>
+                    <p style={{ marginTop: '0.5rem', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', color: '#6b7280' }}>A one-time service to align your portfolio.</p>
                     <div style={{ marginTop: '1.25rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: window.innerWidth < 768 ? '0.5rem' : '0.75rem' }}>
                         <div style={{ textAlign: 'right' }}>
-                          <p className="font-display" style={{ fontSize: '1.75rem', fontWeight: '700', color: '#111827' }}>₹14,999</p>
-                          <p style={{ fontSize: '0.6875rem', fontWeight: '500', color: '#9ca3af' }}>up to ₹50L</p>
+                          <p className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.5rem' : '1.75rem', fontWeight: '700', color: '#111827' }}>₹14,999</p>
+                          <p style={{ fontSize: window.innerWidth < 768 ? '0.625rem' : '0.6875rem', fontWeight: '500', color: '#9ca3af' }}>up to ₹50L</p>
                         </div>
-                        <div style={{ fontSize: '1.75rem', fontWeight: '200', color: '#d1d5db' }}>/</div>
+                        <div style={{ fontSize: window.innerWidth < 768 ? '1.5rem' : '1.75rem', fontWeight: '200', color: '#d1d5db' }}>/</div>
                         <div style={{ textAlign: 'left' }}>
-                          <p className="font-display" style={{ fontSize: '1.75rem', fontWeight: '700', color: '#111827' }}>₹24,999</p>
-                          <p style={{ fontSize: '0.6875rem', fontWeight: '500', color: '#9ca3af' }}>above ₹50L</p>
+                          <p className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.5rem' : '1.75rem', fontWeight: '700', color: '#111827' }}>₹24,999</p>
+                          <p style={{ fontSize: window.innerWidth < 768 ? '0.625rem' : '0.6875rem', fontWeight: '500', color: '#9ca3af' }}>above ₹50L</p>
                         </div>
                       </div>
                     </div>
-                    <div style={{ margin: '1.5rem 0', height: '1px', backgroundColor: '#e5e7eb' }}></div>
+                    <div style={{ margin: window.innerWidth < 768 ? '1rem 0' : '1.5rem 0', height: '1px', backgroundColor: '#e5e7eb' }}></div>
                     <div style={{ flexGrow: 1, color: '#4b5563' }} className="service-list">
-                      <h3 style={{ fontWeight: '600', marginBottom: '0.875rem', color: '#111827', fontSize: '0.8125rem' }}>What's Included:</h3>
-                      <ul>
+                      <h3 style={{ fontWeight: '600', marginBottom: '0.875rem', color: '#111827', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem' }}>What's Included:</h3>
+                      <ul style={{ fontSize: window.innerWidth < 768 ? '0.8125rem' : '0.875rem' }}>
                         <li>In-depth Portfolio Analysis & Risk Profiling</li>
                         <li>Intrinsic Value Analysis (DCF Modeling)</li>
                         <li>Asset Allocation using Modern Portfolio Theory (MPT)</li>
@@ -420,9 +442,9 @@ const InvestmentAdvisoryPage = () => {
                         <li>Execution Guidance & Support</li>
                       </ul>
                     </div>
-                    <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                      <a href="#plan-3" onClick={(e) => handleNavClick('plan-3', e)} className="cta-button" style={{ padding: '0.625rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#1f2937', borderRadius: '0.5rem' }}>View Details</a>
-                      <button className="cta-button" style={{ padding: '0.625rem', fontSize: '0.8125rem', fontWeight: '600', background: '#1F9A32', color: 'white', borderRadius: '0.5rem', border: 'none' }}>Subscribe</button>
+                    <div style={{ marginTop: window.innerWidth < 768 ? '1rem' : '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <a href="#plan-3" onClick={(e) => handleNavClick('plan-3', e)} className="cta-button" style={{ padding: window.innerWidth < 768 ? '0.5rem' : '0.625rem', fontSize: window.innerWidth < 768 ? '0.6875rem' : '0.75rem', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#1f2937', borderRadius: '0.5rem' }}>View Details</a>
+                      <button className="cta-button" style={{ padding: window.innerWidth < 768 ? '0.5rem' : '0.625rem', fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', background: '#1F9A32', color: 'white', borderRadius: '0.5rem', border: 'none' }}>Subscribe</button>
                     </div>
                   </div>
                 </div>
@@ -432,16 +454,16 @@ const InvestmentAdvisoryPage = () => {
 
           {/* Detail Pages - Will be loaded from planData.js */}
           {currentView !== 'main' && (
-            <div className="detail-page" style={{ marginTop: '100px' }}>
-              <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 2rem' }}>
-                <a href="#main" onClick={(e) => handleNavClick('main', e)} className="inline-flex items-center mb-4" style={{ color: '#002C51', textDecoration: 'none', fontWeight: '600', fontSize: '0.875rem' }}>
-                  <svg style={{ width: '20px', height: '20px', marginRight: '0.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="detail-page" style={{ marginTop: window.innerWidth < 768 ? '80px' : '100px' }}>
+              <div style={{ maxWidth: '1400px', margin: '0 auto', padding: window.innerWidth < 768 ? '0 1rem' : '0 2rem' }}>
+                <a href="#main" onClick={(e) => handleNavClick('main', e)} className="inline-flex items-center mb-4" style={{ color: '#002C51', textDecoration: 'none', fontWeight: '600', fontSize: window.innerWidth < 768 ? '0.8125rem' : '0.875rem', display: 'inline-flex', alignItems: 'center', marginBottom: window.innerWidth < 768 ? '1rem' : '1.5rem' }}>
+                  <svg style={{ width: window.innerWidth < 768 ? '18px' : '20px', height: window.innerWidth < 768 ? '18px' : '20px', marginRight: '0.5rem' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                   </svg>
                   Back to All Plans
                 </a>
-                <div className="glass-card">
-                  <h1 className="font-display" style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827', lineHeight: '1.3', marginBottom: '1.25rem' }}>
+                <div className="glass-card" style={{ padding: window.innerWidth < 768 ? '1.25rem' : '2rem' }}>
+                  <h1 className="font-display" style={{ fontSize: window.innerWidth < 768 ? '1.25rem' : '1.5rem', fontWeight: '700', color: '#111827', lineHeight: '1.3', marginBottom: window.innerWidth < 768 ? '1rem' : '1.25rem' }}>
                     {currentView === 'plan-1' && 'Comprehensive Planning: Detailed Services'}
                     {currentView === 'plan-2' && 'Exclusive Wealth Management: In Depth'}
                     {currentView === 'plan-3' && 'Portfolio Rebalancing: In Depth'}

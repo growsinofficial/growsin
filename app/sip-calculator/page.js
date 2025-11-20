@@ -1,813 +1,564 @@
 "use client";
 
-import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import PlaxLayout from "@/layouts/PlaxLayout";
 import { PageBanner } from "@/components/Banner";
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  Cell as ReCell,
-} from "recharts";
-import {
-  TrendingUp,
-  DollarSign,
-  Calendar,
-  Percent,
-  ChevronsUp,
-  Package,
-  SlidersHorizontal,
-  Info,
-  RefreshCw,
-  EyeOff,
-  Eye,
-  PlusCircle,
-  XCircle,
-  Download,
-} from "lucide-react";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, Line, BarChart, Bar, Cell } from 'recharts';
+import { TrendingUp, DollarSign, Calendar, Percent, ChevronsUp, Package, SlidersHorizontal, Info, RefreshCw, EyeOff, Eye, RotateCw, PlusCircle, XCircle, Download } from 'lucide-react';
 
-/* ---------------- Theme & helpers ---------------- */
-const BRAND_A = "#175ee2"; // blue
-const BRAND_B = "#7d2ae8"; // purple
-const ACCENT = "rgb(31 154 50)"; // green
-const ACCENT_DARK = "rgb(31 154 50)";
-const INVESTED_COLOR = "#eaf1ff";
-const RETURNS_COLOR = "#4169ff";
 const NUM_SIMULATIONS = 250;
 
-const inr = (n) =>
-  Number(n || 0).toLocaleString("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  });
-
-/* ---------------- Page Component ---------------- */
+// Main App Component
 export default function SIPCalculatorPage() {
-  // Tabs
-  const [tab, setTab] = useState("sip");
+    const [assets, setAssets] = useState([
+        { name: 'US Equity', allocation: 60, return: 12, volatility: 18 },
+        { name: 'Indian Equity', allocation: 20, return: 14, volatility: 22 },
+        { name: 'Debt', allocation: 20, return: 7, volatility: 5 }
+    ]);
+    
+    const [lumpSum, setLumpSum] = useState(100000);
+    const [monthlyInvestment, setMonthlyInvestment] = useState(25000);
+    const [timePeriod, setTimePeriod] = useState(20);
+    const [annualStepUp, setAnnualStepUp] = useState(10);
+    const [expenseRatio, setExpenseRatio] = useState(1.0);
+    const [ltcgTaxRate, setLtcgTaxRate] = useState(10);
+    const [riskFreeRate, setRiskFreeRate] = useState(7);
+    const [annualRebalancing, setAnnualRebalancing] = useState(true);
+    const [showAdvanced, setShowAdvanced] = useState(true);
+    const [simulationVersion, setSimulationVersion] = useState(0);
 
-  // Core inputs (mirrors original)
-  const [lumpSum, setLumpSum] = useState(100000);
-  const [monthlyInvestment, setMonthlyInvestment] = useState(25000);
-  const [timePeriod, setTimePeriod] = useState(19);
-
-  // Portfolio & assets
-  const [assets, setAssets] = useState([
-    { id: 1, name: "US Equity", allocation: 60, ret: 12, volatility: 18 },
-    { id: 2, name: "Indian Equity", allocation: 20, ret: 14, volatility: 22 },
-    { id: 3, name: "Debt", allocation: 20, ret: 7, volatility: 5 },
-  ]);
-  const nextAssetId = useRef(4);
-
-  const addAsset = () =>
-    setAssets((s) => [...s, { id: nextAssetId.current++, name: `Asset ${nextAssetId.current}`, allocation: 0, ret: 8, volatility: 10 }]);
-  const updateAsset = (index, field, value) => setAssets((s) => s.map((a, i) => (i === index ? { ...a, [field]: value } : a)));
-  const removeAsset = (index) => setAssets((s) => s.filter((_, i) => i !== index));
-
-  // Expert settings
-  const [annualStepUp, setAnnualStepUp] = useState(10);
-  const [expenseRatio, setExpenseRatio] = useState(0.2);
-  const [ltcgTaxRate, setLtcgTaxRate] = useState(10);
-  const [riskFreeRate, setRiskFreeRate] = useState(7);
-  const [annualRebalancing, setAnnualRebalancing] = useState(true);
-
-  const [showAdvanced, setShowAdvanced] = useState(true);
-  const [simulationVersion, setSimulationVersion] = useState(0);
-
-  // Monte Carlo output state
-  const [mcRunning, setMcRunning] = useState(false);
-  const [monteCarloResults, setMonteCarloResults] = useState({
-    chartData: [],
-    bestCase: null,
-    medianCase: null,
-    worstCase: null,
-    sharpeRatio: 0,
-    yearlyBreakdown: [],
-  });
-
-  // deterministic preview
-  const deterministicPreview = useMemo(() => {
-    const years = Math.max(0, Math.floor(timePeriod));
-    const totalAlloc = assets.reduce((s, a) => s + Number(a.allocation || 0), 0) || 100;
-    const weightedReturn = assets.reduce((s, a) => s + (Number(a.allocation || 0) / totalAlloc) * Number(a.ret || 0), 0);
-    const r = weightedReturn || 10;
-    const fv = lumpSum * Math.pow(1 + r / 100, years);
-    const totalInvested = lumpSum + monthlyInvestment * 12 * years;
-    return { fv, invested: totalInvested, returns: Math.max(0, fv - totalInvested) };
-  }, [lumpSum, monthlyInvestment, timePeriod, assets]);
-
-  // Monte Carlo simulation effect
-  useEffect(() => {
-    setMcRunning(true);
-    const t = setTimeout(() => {
-      try {
-        const years = Math.max(0, Math.floor(timePeriod));
-        const months = years * 12;
-        const totalAlloc = assets.reduce((s, a) => s + Number(a.allocation || 0), 0) || 1;
-        const normalized = assets.map((a) => ({ ...a, weight: (Number(a.allocation || 0) / totalAlloc) }));
-
-        const allSims = [];
-        for (let sim = 0; sim < NUM_SIMULATIONS; sim++) {
-          let assetValues = normalized.map((a) => (lumpSum * a.weight) || 0);
-          let currentMonthly = monthlyInvestment;
-          const yearlyTotals = [];
-
-          for (let m = 1; m <= months; m++) {
-            if (annualStepUp > 0 && m % 12 === 1 && m > 1) currentMonthly = Math.round(currentMonthly * (1 + annualStepUp / 100));
-
-            normalized.forEach((asset, idx) => {
-              assetValues[idx] += currentMonthly * asset.weight;
+    useEffect(() => {
+        const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+                if (document.querySelector(`script[src="${src}"]`)) {
+                    resolve(); return;
+                }
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error(`Script load error for ${src}`));
+                document.head.appendChild(script);
             });
+        };
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js').catch(console.error);
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js').catch(console.error);
+        loadScript('https://unpkg.com/jspdf-autotable@3.5.23/dist/jspdf.plugin.autotable.js').catch(console.error);
+    }, []);
 
-            normalized.forEach((asset, idx) => {
-              const muMonthly = Math.pow(1 + (asset.ret || 0) / 100, 1 / 12) - 1;
-              const volMonthly = ((asset.volatility || asset.vol || 0) / 100) / Math.sqrt(12);
-              let u = 0,
-                v = 0;
-              while (u === 0) u = Math.random();
-              while (v === 0) v = Math.random();
-              const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-              const randomReturn = muMonthly + z * volMonthly;
-              assetValues[idx] = assetValues[idx] * (1 + randomReturn);
-            });
+    const runNewSimulation = useCallback(() => setSimulationVersion(prev => prev + 1), []);
+    
+    const updateAsset = (index, field, value) => {
+        setAssets(currentAssets => currentAssets.map((asset, i) => i === index ? { ...asset, [field]: value } : asset));
+    };
 
-            if (expenseRatio > 0) {
-              const monthlyExpense = expenseRatio / 100 / 12;
-              assetValues = assetValues.map((v) => v * (1 - monthlyExpense));
+    const addAsset = () => {
+        setAssets(currentAssets => [...currentAssets, { name: `Asset ${currentAssets.length + 1}`, allocation: 0, return: 8, volatility: 10 }]);
+    };
+
+    const removeAsset = (index) => {
+        setAssets(currentAssets => currentAssets.filter((_, i) => i !== index));
+    };
+
+    const monteCarloResults = useMemo(() => {
+        const allSimulations = [];
+        const totalAllocation = assets.reduce((sum, asset) => sum + asset.allocation, 0);
+        if (totalAllocation !== 100) {
+            return { chartData: [], bestCase: {}, medianCase: { yearlyValues: [], yearlyReturns: [], totalInvested: 0 }, worstCase: {}, sharpeRatio: 0, yearlyBreakdown: [] };
+        }
+        
+        for (let i = 0; i < NUM_SIMULATIONS; i++) {
+            const yearlyValues = [];
+            const yearlyReturns = [];
+            let assetValues = assets.map(asset => lumpSum * (asset.allocation / 100));
+            let currentMonthlySip = monthlyInvestment;
+
+            for (let year = 1; year <= timePeriod; year++) {
+                const randomFactors = assets.map(() => (Math.random() - 0.5) * 2);
+                const assetReturns = assets.map((asset, index) => (asset.return / 100) + randomFactors[index] * (asset.volatility / 100));
+                const yearlySip = currentMonthlySip * 12;
+                assetValues = assetValues.map((val, index) => val + yearlySip * (assets[index].allocation / 100));
+                const prevTotal = assetValues.reduce((a, b) => a + b, 0);
+                assetValues = assetValues.map((val, index) => val * (1 + assetReturns[index]));
+                let totalValue = assetValues.reduce((a, b) => a + b, 0);
+                totalValue *= (1 - (expenseRatio / 100));
+                const netPortfolioReturn = prevTotal > 0 ? (totalValue / prevTotal) - 1 : 0;
+                yearlyReturns.push(netPortfolioReturn * 100);
+                if (annualRebalancing) {
+                    assetValues = assets.map(asset => totalValue * (asset.allocation / 100));
+                }
+                yearlyValues.push(totalValue);
+                currentMonthlySip *= (1 + annualStepUp / 100);
             }
-
-            if (m % 12 === 0) {
-              const totalValue = assetValues.reduce((a, b) => a + b, 0);
-              if (annualRebalancing && totalValue > 0) {
-                assetValues = normalized.map((asset) => totalValue * asset.weight);
-              }
-              yearlyTotals.push(assetValues.reduce((a, b) => a + b, 0));
-            }
-          }
-
-          const final = yearlyTotals[yearlyTotals.length - 1] || 0;
-          const totalInvested = lumpSum + Array.from({ length: years }, (_, i) => monthlyInvestment * Math.pow(1 + annualStepUp / 100, i) * 12).reduce((a, b) => a + b, 0);
-          allSims.push({ final, yearlyTotals, totalInvested });
+            const totalInvested = lumpSum + Array.from({length: timePeriod}, (_, j) => monthlyInvestment * Math.pow(1 + annualStepUp/100, j) * 12).reduce((a, b) => a + b, 0);
+            allSimulations.push({ finalValue: yearlyValues[yearlyValues.length-1] || 0, yearlyValues, yearlyReturns, totalInvested });
         }
 
-        allSims.sort((a, b) => a.final - b.final);
-        const at = (p) => allSims[Math.floor(p * (allSims.length - 1))] || { yearlyTotals: Array.from({ length: years }, () => 0), final: 0, totalInvested: 0 };
-        const worst = at(0.1);
-        const median = at(0.5);
-        const best = at(0.9);
+        allSimulations.sort((a, b) => a.finalValue - b.finalValue);
+        const percentile = (p) => allSimulations[Math.floor(p * (NUM_SIMULATIONS - 1))];
+        const bestCase = percentile(0.9);
+        const medianCase = percentile(0.5);
+        const worstCase = percentile(0.1);
 
-        const chartData = Array.from({ length: years }, (_, i) => ({
-          year: i + 1,
-          worst: Math.round(worst.yearlyTotals[i] || 0),
-          median: Math.round(median.yearlyTotals[i] || 0),
-          best: Math.round(best.yearlyTotals[i] || 0),
+        const chartData = Array.from({ length: timePeriod }, (_, i) => ({
+            year: i + 1,
+            worst: Math.round(worstCase.yearlyValues[i] || 0),
+            median: Math.round(medianCase.yearlyValues[i] || 0),
+            best: Math.round(bestCase.yearlyValues[i] || 0),
         }));
-
-        const medianYrReturns = (median.yearlyTotals || []).map((val, idx) => {
-          const start = idx === 0 ? 0 : median.yearlyTotals[idx - 1];
-          const investedTillStart = monthlyInvestment * 12 * idx;
-          const base = start + investedTillStart;
-          const ret = base > 0 ? (val / base - 1) * 100 : 0;
-          return ret;
-        });
-        const avgReturn = medianYrReturns.length ? medianYrReturns.reduce((a, b) => a + b, 0) / medianYrReturns.length : 0;
-        const stdDev = medianYrReturns.length ? Math.sqrt(medianYrReturns.map((x) => Math.pow(x - avgReturn, 2)).reduce((a, b) => a + b, 0) / medianYrReturns.length) : 0;
+        
+        const medianReturns = medianCase.yearlyReturns;
+        const avgReturn = medianReturns.reduce((a, b) => a + b, 0) / medianReturns.length;
+        const stdDev = Math.sqrt(medianReturns.map(x => Math.pow(x - avgReturn, 2)).reduce((a, b) => a + b, 0) / medianReturns.length);
         const sharpeRatio = stdDev > 0 ? (avgReturn - riskFreeRate) / stdDev : 0;
-
+        
         const yearlyBreakdown = [];
-        let openingBalance = 0;
-        let monthlyForYear = monthlyInvestment;
-        for (let y = 1; y <= (Math.max(0, Math.floor(timePeriod))); y++) {
-          const closing = median.yearlyTotals?.[y - 1] || 0;
-          const investedThisYear = monthlyForYear * 12;
-          const interest = closing - openingBalance - investedThisYear;
-          const returnPct = openingBalance + investedThisYear > 0 ? ((closing / (openingBalance + investedThisYear) - 1) * 100) : 0;
-          yearlyBreakdown.push({
-            year: y,
-            openingBalance: Math.round(openingBalance),
-            invested: Math.round(investedThisYear),
-            returnRate: returnPct.toFixed(2),
-            interest: Math.round(interest),
-            closingBalance: Math.round(closing),
-          });
-          openingBalance = closing;
-          monthlyForYear = Math.round(monthlyForYear * (1 + annualStepUp / 100));
+        let openingBalanceYear = lumpSum;
+        let medianMonthlySip = monthlyInvestment;
+        for (let year = 1; year <= timePeriod; year++) {
+            const closingBalance = medianCase.yearlyValues[year-1];
+            const investedThisYear = medianMonthlySip * 12;
+            const interestEarned = closingBalance - openingBalanceYear - investedThisYear;
+            yearlyBreakdown.push({
+                year,
+                openingBalance: Math.round(openingBalanceYear),
+                invested: Math.round(investedThisYear),
+                returnRate: medianReturns[year-1]?.toFixed(2) || '0.00',
+                interest: Math.round(interestEarned),
+                closingBalance: Math.round(closingBalance),
+            });
+            openingBalanceYear = closingBalance;
+            medianMonthlySip *= (1 + annualStepUp / 100);
         }
+        return { chartData, bestCase, medianCase, worstCase, sharpeRatio, yearlyBreakdown };
+    }, [lumpSum, monthlyInvestment, timePeriod, annualStepUp, expenseRatio, assets, annualRebalancing, simulationVersion, riskFreeRate]);
 
-        setMonteCarloResults({
-          chartData,
-          bestCase: best,
-          medianCase: median,
-          worstCase: worst,
-          sharpeRatio,
-          yearlyBreakdown,
-        });
-      } catch (err) {
-        console.error("MC error", err);
-      } finally {
-        setMcRunning(false);
-      }
-    }, 10);
+    const formatNumber = (num, decimals = 2) => {
+        if (num === null || num === undefined || isNaN(num)) return 'N/A';
+        if (num >= 10000000) return `₹${(num / 10000000).toFixed(decimals)} Cr`;
+        if (num >= 100000) return `₹${(num / 100000).toFixed(decimals)} L`;
+        return `₹${Math.round(num).toLocaleString('en-IN')}`;
+    };
+    
+    const allProps = { lumpSum, monthlyInvestment, timePeriod, annualStepUp, expenseRatio, ltcgTaxRate, riskFreeRate, assets, annualRebalancing, showAdvanced, simulationVersion, monteCarloResults };
 
-    return () => clearTimeout(t);
-  }, [simulationVersion, assets, lumpSum, monthlyInvestment, timePeriod, annualStepUp, expenseRatio, annualRebalancing, riskFreeRate]);
-
-  // PDF export — dynamic import
-  const reportRef = useRef(null);
-  const exportPdf = async () => {
-    if (typeof window === "undefined") {
-      alert("PDF export works only in the browser.");
-      return;
-    }
-    if (!reportRef.current) {
-      alert("Nothing to export yet.");
-      return;
-    }
-    try {
-      const html2canvasModule = await import("html2canvas");
-      const jspdfModule = await import("jspdf");
-      const html2canvas = html2canvasModule?.default ?? html2canvasModule;
-      const { jsPDF } = jspdfModule;
-      const canvas = await html2canvas(reportRef.current, { scale: 2 });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "pt", "a4");
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-      const imgW = pageW;
-      const imgH = (imgProps.height * imgW) / imgProps.width;
-      if (imgH <= pageH) {
-        pdf.addImage(imgData, "PNG", 0, 0, imgW, imgH);
-      } else {
-        const ratio = canvas.width / imgW;
-        const sliceH = Math.floor(pageH * ratio);
-        let y = 0;
-        const tmpCanvas = document.createElement("canvas");
-        const tmpCtx = tmpCanvas.getContext("2d");
-        while (y < canvas.height) {
-          tmpCanvas.width = canvas.width;
-          tmpCanvas.height = Math.min(sliceH, canvas.height - y);
-          tmpCtx.clearRect(0, 0, tmpCanvas.width, tmpCanvas.height);
-          tmpCtx.drawImage(canvas, 0, y, tmpCanvas.width, tmpCanvas.height, 0, 0, tmpCanvas.width, tmpCanvas.height);
-          const pageData = tmpCanvas.toDataURL("image/png");
-          const pageImgH = tmpCanvas.height / ratio;
-          pdf.addImage(pageData, "PNG", 0, 0, imgW, pageImgH);
-          y += sliceH;
-          if (y < canvas.height) pdf.addPage();
-        }
-      }
-      pdf.save("portfolio-report.pdf");
-    } catch (err) {
-      console.error("PDF export failed", err);
-      alert("PDF export failed. Install html2canvas + jspdf or try again in browser console.");
-    }
-  };
-
-  return (
-    <PlaxLayout bg={false}>
-      <PageBanner pageName="Investment Calculators" title="Professional Portfolio Simulator — Monte Carlo & Reports" />
-
-      <div className="mil-blog-list mil-p-0-160">
-        <div className="container">
-          <div className="row">
-            {/* Tabs */}
-            <div className="col-xl-12 mil-mb-20">
-              <div className="tab-row" style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                <button className={`tab ${tab === "sip" ? "active" : ""}`} onClick={() => setTab("sip")}>SIP</button>
-                <button className={`tab ${tab === "lumpsum" ? "active" : ""}`} onClick={() => setTab("lumpsum")}>Lumpsum</button>
-                <div style={{ flex: 1 }} />
-                <div style={{ fontWeight: 700, color: BRAND_A }}>Monte Carlo: {NUM_SIMULATIONS} sims</div>
-              </div>
-            </div>
-
-            {/* Left: controls */}
-            <div className="col-md-7">
-              <div className="card-form">
-                <div style={{ display: "grid", gap: 12 }}>
-                  <h3 style={{ margin: 0 }}>Core Inputs</h3>
-
-                  <InputSlider label="Initial Lump Sum" Icon={Package} value={lumpSum} setValue={setLumpSum} min={0} max={20000000} step={10000} inputType="currency" />
-                  <InputSlider label="Monthly Investment (SIP)" Icon={DollarSign} value={monthlyInvestment} setValue={setMonthlyInvestment} min={0} max={500000} step={500} inputType="currency" />
-                  <InputSlider label="Time Period (Years)" Icon={Calendar} value={timePeriod} setValue={setTimePeriod} min={0} max={60} step={1} inputType="year" />
-
-                  {/* Portfolio editor */}
-                  <div style={{ borderTop: "1px dashed #eef2f3", paddingTop: 12 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                      <h4 style={{ margin: 0 }}>Portfolio</h4>
-                      <div style={{
-                        fontWeight: 700,
-                        color: totalAllocationOk(assets) ? "#065f46" : "#7f1d1d",
-                        padding: "6px 10px",
-                        borderRadius: 8,
-                        background: totalAllocationOk(assets) ? "#ecfdf5" : "#fff1f2",
-                      }}>
-                        Total: {assets.reduce((s, a) => s + Number(a.allocation || 0), 0)}%
-                      </div>
-                    </div>
-
-                    <div style={{ display: "grid", gap: 8 }}>
-                      {assets.map((asset, idx) => {
-                        // compute percent fills for each slider
-                        const allocPct = Math.max(0, Math.min(100, Number(asset.allocation || 0)));
-                        const retPct = Math.max(0, Math.min(100, (Number(asset.ret || 0) + 50))); // ret range -50..50 -> map to 0..100
-                        const volPct = Math.max(0, Math.min(100, Number(asset.volatility || 0)));
-                        return (
-                          <div key={asset.id} className="asset-row" style={{ padding: 10, borderRadius: 8, background: "#f8fafc", border: "1px solid #eef2f3", alignItems: "center" }}>
-                            <div style={{ flex: 1, minWidth: 220 }}>
-                              <input
-                                value={asset.name}
-                                onChange={(e) => updateAsset(idx, "name", e.target.value)}
-                                style={{ border: "none", fontWeight: 700, color: BRAND_A, width: "100%", background: "transparent" }}
-                              />
-                              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-                                <div style={{ minWidth: 80, color: "#3b82f6", fontSize: 13 }}>Allocation %</div>
-                                <input className="small-input" type="number" value={asset.allocation} onChange={(e) => updateAsset(idx, "allocation", Number(e.target.value || 0))} />
-                                <input
-                                  className="asset-range"
-                                  type="range"
-                                  min={0}
-                                  max={100}
-                                  step={1}
-                                  value={asset.allocation}
-                                  onChange={(e) => updateAsset(idx, "allocation", Number(e.target.value))}
-                                  style={{ background: `linear-gradient(90deg, ${ACCENT} ${allocPct}%, #e9e9e9 ${allocPct}%)` }}
-                                />
-
-                                <div style={{ minWidth: 70, color: "#3b82f6", fontSize: 13 }}>Return %</div>
-                                <input className="small-input" type="number" value={asset.ret} onChange={(e) => updateAsset(idx, "ret", Number(e.target.value || 0))} />
-                                <input
-                                  className="asset-range"
-                                  type="range"
-                                  min={-50}
-                                  max={50}
-                                  step={0.1}
-                                  value={asset.ret}
-                                  onChange={(e) => updateAsset(idx, "ret", Number(e.target.value))}
-                                  style={{ background: `linear-gradient(90deg, ${ACCENT} ${retPct}%, #e9e9e9 ${retPct}%)` }}
-                                />
-
-                                <div style={{ minWidth: 90, color: "#3b82f6", fontSize: 13 }}>Volatility %</div>
-                                <input className="small-input" type="number" value={asset.volatility} onChange={(e) => updateAsset(idx, "volatility", Number(e.target.value || 0))} />
-                                <input
-                                  className="asset-range"
-                                  type="range"
-                                  min={0}
-                                  max={100}
-                                  step={0.1}
-                                  value={asset.volatility}
-                                  onChange={(e) => updateAsset(idx, "volatility", Number(e.target.value))}
-                                  style={{ background: `linear-gradient(90deg, ${ACCENT} ${volPct}%, #e9e9e9 ${volPct}%)` }}
-                                />
-                              </div>
+    return (
+        <PlaxLayout bg={false}>
+            <div className="mil-blog-list mil-p-0-160" style={{ paddingTop: '150px' }}>
+                <div className="container">
+                    <header className="mb-8 text-center">
+                        <h1 className="font-bold" style={{ color: 'rgb(31 154 50)', textAlign: 'center', lineHeight: '1.3', fontSize: '1.5rem' }}>Professional Portfolio Simulator</h1>
+                        <p className="text-gray-600 mt-2" style={{ textAlign: 'center', fontSize: '0.875rem' }}>Multi-Asset forecasting with Monte Carlo simulation and Rebalancing Strategy.</p>
+                    </header>
+                    <div className="row">
+                        <div className="col-lg-4">
+                            <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                                <SipCalculatorInputs {...{ updateAsset, addAsset, removeAsset, setAssets, setLumpSum, setMonthlyInvestment, setTimePeriod, setAnnualStepUp, setExpenseRatio, setLtcgTaxRate, setRiskFreeRate, setAnnualRebalancing, setShowAdvanced, runNewSimulation, ...allProps }} />
                             </div>
-
-                            <div style={{ marginLeft: 8 }}>
-                              <button onClick={() => removeAsset(idx)} className="preset" style={{ background: "#fff1f2", border: "1px solid #fee2e2" }} aria-label="Remove asset">
-                                <XCircle size={18} />
-                              </button>
+                        </div>
+                        <div className="col-lg-8">
+                            <div style={{ background: 'white', padding: '1.5rem', borderRadius: '1rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
+                                <SipResultsDisplay {...{ ltcgTaxRate, formatNumber, lumpSum, ...allProps }} />
                             </div>
-                          </div>
-                        );
-                      })}
-
-                      <button onClick={addAsset} className="preset" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <PlusCircle size={16} /> Add asset
-                      </button>
+                        </div>
                     </div>
-                  </div>
-
-                  {/* Expert settings */}
-                  <div style={{ borderTop: "1px dashed #eef2f3", paddingTop: 12 }}>
-                    <button onClick={() => setShowAdvanced((s) => !s)} className="preset" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%" }}>
-                      <span>Expert Settings</span>
-                      {showAdvanced ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-
-                    {showAdvanced && (
-                      <div style={{ marginTop: 19, display: "grid", gap: 19 }}>
-                        <ToggleSwitch label="Annual Rebalancing" Icon={RefreshCw} enabled={annualRebalancing} setEnabled={setAnnualRebalancing} />
-                        <InputSlider label="Annual Step-up (SIP)" Icon={ChevronsUp} value={annualStepUp} setValue={setAnnualStepUp} min={0} max={25} step={0.5} inputType="percent" />
-                        <InputSlider label="Portfolio Expense Ratio (annual %)" Icon={Percent} value={expenseRatio} setValue={setExpenseRatio} min={0} max={5} step={0.01} inputType="percent" />
-                        <InputSlider label="Risk-Free Rate (%)" Icon={Percent} value={riskFreeRate} setValue={setRiskFreeRate} min={0} max={15} step={0.25} inputType="percent" />
-                        <InputSlider label="LTCG Tax Rate (%)" Icon={Percent} value={ltcgTaxRate} setValue={setLtcgTaxRate} min={0} max={30} step={1} inputType="percent" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, alignItems: "center", marginTop: 8 }}>
-                    <button onClick={() => setSimulationVersion((v) => v + 1)} className="invest-btn" disabled={mcRunning}>
-                      {mcRunning ? "Running..." : `Run Monte Carlo (${NUM_SIMULATIONS})`}
-                    </button>
-
-                    <div style={{ flex: 1 }} />
-
-                    <button className="preset" onClick={exportPdf}>
-                      <Download size={14} /> Export PDF
-                    </button>
-                  </div>
-
-                  <div className="summary-small" style={{ marginTop: 8 }}>
-                    <div>
-                      <div className="small-label">Invested amount</div>
-                      <div className="small-val">{inr(lumpSum + monthlyInvestment * 12 * timePeriod)}</div>
-                    </div>
-                    <div>
-                      <div className="small-label">Est. returns (deterministic)</div>
-                      <div className="small-val">{inr(deterministicPreview.returns)}</div>
-                    </div>
-                    <div>
-                      <div className="small-label">Total value (deterministic)</div>
-                      <div className="small-val">{inr(deterministicPreview.fv)}</div>
-                    </div>
-                    <div>
-                      <button className="preset" onClick={() => setSimulationVersion((v) => v + 1)}>Refresh</button>
-                    </div>
-                  </div>
+                    <footer className="text-center mt-8 text-sm text-gray-500">
+                        <p>Disclaimer: This calculator uses a stochastic model for illustrative purposes and results are not guaranteed. Consult a SEBI-registered financial advisor before investing.</p>
+                    </footer>
                 </div>
-              </div>
             </div>
+        </PlaxLayout>
+    );
+}
 
-            {/* Right: charts/outcomes */}
-            <div className="col-md-5">
-              <div className="card-chart" style={{ overflow: "visible" }}>
-                {monteCarloResults && monteCarloResults.chartData && monteCarloResults.chartData.length ? (
-                  <>
-                    <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div style={{ fontWeight: 700, fontSize: 16, color: BRAND_A }}>Monte Carlo Outcomes</div>
-                      <div style={{ fontSize: 13, color: "#6b7280" }}>Sharpe: {monteCarloResults.sharpeRatio ? monteCarloResults.sharpeRatio.toFixed(2) : "—"}</div>
+function SipCalculatorInputs({ setLumpSum, setMonthlyInvestment, setTimePeriod, setAnnualStepUp, setExpenseRatio, setLtcgTaxRate, setRiskFreeRate, setAnnualRebalancing, setShowAdvanced, runNewSimulation, ...props }) {
+    const { lumpSum, monthlyInvestment, timePeriod, assets, updateAsset, addAsset, removeAsset, annualRebalancing, showAdvanced } = props;
+    const totalAllocation = useMemo(() => assets.reduce((sum, asset) => sum + Number(asset.allocation), 0), [assets]);
+    
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <h2 className="text-2xl font-bold text-center" style={{ color: 'rgb(0 44 81)' }}>Core Inputs</h2>
+            <InputSlider label="Initial Lump Sum" Icon={Package} value={lumpSum} setValue={setLumpSum} min={0} max={10000000} step={10000} inputType="currency" />
+            <InputSlider label="Monthly Investment (SIP)" Icon={DollarSign} value={monthlyInvestment} setValue={setMonthlyInvestment} min={500} max={100000} step={500} inputType="currency" />
+            <InputSlider label="Time Period (Years)" Icon={Calendar} value={timePeriod} setValue={setTimePeriod} min={1} max={40} step={1} inputType="year" />
+            <div style={{ paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                     <h2 className="text-2xl font-bold" style={{ color: 'rgb(0 44 81)' }}>Portfolio</h2>
+                     <div style={{ fontWeight: 'bold', fontSize: '0.875rem', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', background: totalAllocation === 100 ? '#d1fae5' : '#fee2e2', color: totalAllocation === 100 ? '#065f46' : '#991b1b' }}>
+                        Total: {totalAllocation}%
+                     </div>
+                </div>
+                {assets.map((asset, index) => (
+                    <div key={index} style={{ padding: '1rem', background: '#f3f4f6', borderRadius: '0.5rem', border: '1px solid #e5e7eb', marginBottom: '1rem', position: 'relative' }}>
+                        {assets.length > 1 && (
+                            <button onClick={() => removeAsset(index)} style={{ position: 'absolute', top: '0.5rem', right: '0.5rem', color: '#f87171', cursor: 'pointer', background: 'transparent', border: 'none' }}>
+                                <XCircle size={20} />
+                            </button>
+                        )}
+                        <input type="text" value={asset.name} onChange={(e) => updateAsset(index, 'name', e.target.value)} style={{ fontWeight: 'bold', color: 'rgb(31 154 50)', background: 'transparent', marginBottom: '0.5rem', width: '100%', border: 'none', outline: 'none' }} />
+                        <InputSlider label="Allocation" Icon={Package} value={asset.allocation} setValue={(val) => updateAsset(index, 'allocation', val)} min={0} max={100} step={5} inputType="percent" />
+                        <InputSlider label="Return" Icon={TrendingUp} value={asset.return} setValue={(val) => updateAsset(index, 'return', val)} min={-10} max={30} step={0.5} inputType="percent" />
+                        <InputSlider label="Volatility" Icon={SlidersHorizontal} value={asset.volatility} setValue={(val) => updateAsset(index, 'volatility', val)} min={0} max={50} step={1} inputType="percent" />
                     </div>
-
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, width: "100%", marginTop: 8 }}>
-                      <div style={{ padding: 8, borderRadius: 8, border: "1px solid #f3e8e9", background: "#fff7f8" }}>
-                        <div style={{ fontSize: 12, color: "#991b1b" }}>Worst (10%)</div>
-                        <div style={{ fontWeight: 800, marginTop: 6 }}>{inr(monteCarloResults.worstCase?.final || 0)}</div>
-                      </div>
-                      <div style={{ padding: 8, borderRadius: 8, border: "1px solid #f0e7ff", background: "#faf8ff" }}>
-                        <div style={{ fontSize: 12, color: "#6b21a8" }}>Median (50%)</div>
-                        <div style={{ fontWeight: 800, marginTop: 6 }}>{inr(monteCarloResults.medianCase?.final || 0)}</div>
-                      </div>
-                      <div style={{ padding: 8, borderRadius: 8, border: "1px solid #def7ec", background: "#f0fdf4" }}>
-                        <div style={{ fontSize: 12, color: "#047857" }}>Best (90%)</div>
-                        <div style={{ fontWeight: 800, marginTop: 6 }}>{inr(monteCarloResults.bestCase?.final || 0)}</div>
-                      </div>
+                ))}
+                <button onClick={addAsset} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem 1rem', border: '2px dashed #d1d5db', borderRadius: '0.5rem', fontWeight: '600', color: '#6b7280', cursor: 'pointer', background: 'transparent', transition: 'all 0.3s' }}>
+                    <PlusCircle size={20} />Add Asset
+                </button>
+            </div>
+             <div style={{ paddingTop: '1rem', borderTop: '1px solid #e5e7eb' }}>
+                <button onClick={() => setShowAdvanced(!showAdvanced)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', fontSize: '1.125rem', fontWeight: '600', color: 'rgb(31 154 50)', cursor: 'pointer', background: 'transparent', border: 'none' }}>
+                    <span>Expert Settings</span>
+                    {showAdvanced ? <EyeOff /> : <Eye />}
+                </button>
+                {showAdvanced && (
+                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                        <ToggleSwitch label="Annual Rebalancing" Icon={RotateCw} enabled={annualRebalancing} setEnabled={setAnnualRebalancing} tooltip="Resets portfolio to target allocation each year." />
+                        <InputSlider label="Annual Step-up (SIP)" Icon={ChevronsUp} value={props.annualStepUp} setValue={setAnnualStepUp} min={0} max={25} step={1} inputType="percent" />
+                        <InputSlider label="Portfolio Expense Ratio" Icon={Percent} value={props.expenseRatio} setValue={setExpenseRatio} min={0} max={5} step={0.1} inputType="percent" tooltip="Weighted average annual fee of your portfolio."/>
+                        <InputSlider label="Risk-Free Rate" Icon={Percent} value={props.riskFreeRate} setValue={setRiskFreeRate} min={0} max={10} step={0.25} inputType="percent" tooltip="Return on a risk-free asset, like a government bond. Used for Sharpe Ratio."/>
+                        <InputSlider label="LTCG Tax Rate" Icon={Percent} value={props.ltcgTaxRate} setValue={setLtcgTaxRate} min={0} max={30} step={1} inputType="percent" tooltip="Long-Term Capital Gains tax on gains over ₹1 lakh."/>
                     </div>
-
-                    <div style={{ width: "100%", height: 260, marginTop: 8 }}>
-                      <ResponsiveContainer>
-                        <ComposedChart data={monteCarloResults.chartData}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                          <XAxis dataKey="year" tickFormatter={(t) => `Yr ${t}`} stroke="#6b7280" />
-                          <YAxis tickFormatter={(val) => inr(val)} width={90} stroke="#6b7280" />
-                          <Tooltip formatter={(value) => inr(value)} />
-                          <Area type="monotone" dataKey="worst" name="Worst" stroke="#fca5a5" fill="#fee2e2" fillOpacity={0.6} dot={false} />
-                          <Area type="monotone" dataKey="best" name="Best" stroke="#86efac" fill="#dcfce7" fillOpacity={0.6} dot={false} />
-                          <Line type="monotone" dataKey="median" name="Median" stroke="#a855f7" strokeWidth={3} dot={false} />
-                        </ComposedChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div style={{ width: "100%", height: 260 }}>
-                      <ResponsiveContainer>
-                        <PieChart>
-                          <Pie
-                            data={[
-                              { name: "Invested", value: deterministicPreview.invested },
-                              { name: "Est. returns", value: Math.max(0, deterministicPreview.fv - deterministicPreview.invested) },
-                            ]}
-                            innerRadius={80}
-                            outerRadius={110}
-                            dataKey="value"
-                            startAngle={90}
-                            endAngle={-270}
-                            paddingAngle={2}
-                          >
-                            <Cell fill={INVESTED_COLOR} />
-                            <Cell fill={RETURNS_COLOR} />
-                          </Pie>
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-
-                    <div className="donut-legend" style={{ marginTop: 8 }}>
-                      <div className="legend-row"><span className="legend-swatch" style={{ background: INVESTED_COLOR }} /> <span className="legend-label">Invested</span></div>
-                      <div className="legend-row"><span className="legend-swatch" style={{ background: RETURNS_COLOR }} /> <span className="legend-label">Est. returns</span></div>
-                    </div>
-
-                    <div className="mini-area" style={{ marginTop: 8 }}>
-                      <ResponsiveContainer width="100%" height={140}>
-                        <AreaChart
-                          data={Array.from({ length: Math.max(1, timePeriod) }, (_, i) => ({ year: i + 1, value: Math.round((deterministicPreview.fv / Math.max(1, timePeriod)) * (i + 1)) }))}
-                          margin={{ top: 6, right: 6, left: 0, bottom: 0 }}
-                        >
-                          <defs>
-                            <linearGradient id="g1" x1="0" x2="0" y1="0" y2="1">
-                              <stop offset="0%" stopColor={BRAND_A} stopOpacity={0.85} />
-                              <stop offset="100%" stopColor={BRAND_B} stopOpacity={0.08} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                          <XAxis dataKey="year" axisLine={false} tickLine={false} />
-                          <YAxis hide />
-                          <Tooltip formatter={(v) => inr(v)} />
-                          <Area type="monotone" dataKey="value" stroke={BRAND_A} fill="url(#g1)" strokeWidth={2} />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </>
                 )}
-              </div>
             </div>
+            <button onClick={runNewSimulation} style={{ width: '100%', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem 1rem', background: 'rgb(242 116 87)', color: 'white', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', border: 'none', boxShadow: '0 4px 6px rgba(242, 116, 87, 0.3)', transition: 'all 0.3s' }}>
+                <RefreshCw size={20}/>Run New Simulation
+            </button>
+        </div>
+    );
+}
 
-            {/* Yearly breakdown */}
-            <div className="col-xl-12 mil-mt-20">
-              <div className="table-responsive" ref={reportRef}>
-                <div style={{ padding: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <h3>Yearly breakdown (most likely / median path)</h3>
-                    <div style={{ fontSize: 13, color: "#6b7280" }}>Risk-free: {riskFreeRate}% • LTCG: {ltcgTaxRate}%</div>
-                  </div>
+function SipResultsDisplay({ monteCarloResults, ltcgTaxRate, formatNumber, lumpSum, ...allProps }) {
+    const { chartData, bestCase, medianCase, worstCase, sharpeRatio, yearlyBreakdown } = monteCarloResults;
+    const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+    const [showPdfModal, setShowPdfModal] = useState(false);
 
-                  <table className="table" style={{ marginTop: 8 }}>
-                    <thead>
-                      <tr>
-                        <th>Year</th>
-                        <th>Opening balance</th>
-                        <th>Invested</th>
-                        <th>Estimated return %</th>
-                        <th>Interest</th>
-                        <th>Closing balance</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {monteCarloResults.yearlyBreakdown && monteCarloResults.yearlyBreakdown.length ? (
-                        monteCarloResults.yearlyBreakdown.map((r) => (
-                          <tr key={r.year}>
-                            <td>{r.year}</td>
-                            <td>{inr(r.openingBalance)}</td>
-                            <td>{inr(r.invested)}</td>
-                            <td className={r.returnRate >= 0 ? "positive" : "negative"}>{r.returnRate >= 0 ? `+${r.returnRate}%` : `${r.returnRate}%`}</td>
-                            <td>{inr(r.interest)}</td>
-                            <td>{inr(r.closingBalance)}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td>--</td>
-                          <td>{inr(lumpSum)}</td>
-                          <td>{inr(monthlyInvestment * 12 * timePeriod)}</td>
-                          <td>—</td>
-                          <td>{inr(0)}</td>
-                          <td>{inr(deterministicPreview.fv)}</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
+    const handlePdfDownloadRequest = () => setShowPdfModal(true);
+
+    const handlePdfGeneration = async (userDetails) => {
+        setShowPdfModal(false);
+        setIsGeneratingPdf(true);
+        try {
+            if (typeof window.html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                alert('PDF libraries are still loading. Please try again in a moment.');
+                setIsGeneratingPdf(false);
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            if (typeof doc.autoTable !== 'function') {
+                alert('PDF AutoTable plugin is not ready. Please try again in a moment.');
+                setIsGeneratingPdf(false);
+                return;
+            }
+            const pageHeight = doc.internal.pageSize.getHeight();
+            let y = 15;
+            const addText = (text, size, isBold, x = 15, align = 'left') => {
+                if (y > pageHeight - 20) { doc.addPage(); y = 15; }
+                doc.setFontSize(size);
+                doc.setFont(undefined, isBold ? 'bold' : 'normal');
+                doc.text(text, x, y, { align: align });
+                y += size * 0.5 + 3;
+            };
+            addText('Investment Portfolio Simulation Report', 22, true, doc.internal.pageSize.getWidth() / 2, 'center');
+            y += 5;
+            addText(`Report For: ${userDetails.name}`, 10, false);
+            addText(`Email: ${userDetails.email} | Phone: ${userDetails.phone}`, 10, false);
+            addText(`Location: ${userDetails.location}`, 10, false);
+            addText(`Generated on: ${new Date().toLocaleDateString()}`, 10, false);
+            y += 10;
+            addText('Summary of Inputs', 16, true);
+            const inputData = [
+                ['Lump Sum Investment', formatNumber(allProps.lumpSum)],
+                ['Monthly Investment (SIP)', formatNumber(allProps.monthlyInvestment)],
+                ['Time Period', `${allProps.timePeriod} Years`],
+                ['Annual SIP Step-up', `${allProps.annualStepUp}%`],
+                ['Portfolio Expense Ratio', `${allProps.expenseRatio}%`],
+                ['Annual Rebalancing', allProps.annualRebalancing ? 'Enabled' : 'Disabled'],
+            ];
+            doc.autoTable({ startY: y, head: [['Parameter', 'Value']], body: inputData, theme: 'grid' });
+            y = doc.autoTable.previous.finalY + 10;
+            addText('Portfolio Composition', 14, true);
+            const assetData = allProps.assets.map(a => [a.name, `${a.allocation}%`, `${a.return}%`, `${a.volatility}%`]);
+            doc.autoTable({ startY: y, head: [['Asset Name', 'Allocation', 'Expected Return', 'Volatility']], body: assetData, theme: 'grid' });
+            doc.addPage();
+            y = 15;
+            addText('Simulation Results', 18, true);
+            const addImageToPdf = async (elementId) => {
+                const element = document.getElementById(elementId);
+                if (!element) return;
+                const canvas = await window.html2canvas(element, {scale: 2, backgroundColor: '#ffffff'});
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 180;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                if (y + imgHeight > pageHeight - 15) { doc.addPage(); y = 15; }
+                doc.addImage(imgData, 'PNG', 15, y, imgWidth, imgHeight);
+                y += imgHeight + 10;
+            };
+            await addImageToPdf('outcomes-section-for-pdf');
+            await addImageToPdf('chart-section');
+            doc.addPage();
+            y=15;
+            await addImageToPdf('rolling-returns-section');
+            doc.addPage();
+            y = 15;
+            addText('Yearly Breakdown (Most Likely Path)', 16, true);
+            const breakdownData = yearlyBreakdown.map(r => [r.year, formatNumber(r.invested), `${r.returnRate}%`, formatNumber(r.interest), formatNumber(r.closingBalance)]);
+            doc.autoTable({ startY: y, head: [['Year', 'Invested', 'Return', 'Interest', 'Closing Balance']], body: breakdownData, theme: 'grid' });
+            doc.save(`Portfolio-Report-${userDetails.name.replace(/\s/g, '_')}.pdf`);
+        } catch (error) {
+            console.error("PDF Generation Error: ", error);
+            alert("An error occurred while generating the PDF. Please check the console for details.");
+        } finally {
+            setIsGeneratingPdf(false);
+        }
+    };
+
+    const calculateTax = (finalValue, totalInvested) => {
+        if (!finalValue || !totalInvested) return { tax: 0, postTaxValue: 0 };
+        const gains = finalValue - totalInvested;
+        if (gains <= 100000) return { tax: 0, postTaxValue: finalValue };
+        const taxableGains = gains - 100000;
+        const tax = taxableGains * (ltcgTaxRate / 100);
+        return { tax: Math.round(tax), postTaxValue: Math.round(finalValue - tax) };
+    }
+
+    const medianTax = medianCase ? calculateTax(medianCase.finalValue, medianCase.totalInvested) : {};
+    
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            {showPdfModal && <PdfFormModal on_Submit={handlePdfGeneration} on_Cancel={() => setShowPdfModal(false)} />}
+            <div id="outcomes-section-for-pdf">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <h3 className="text-xl font-bold" style={{ color: 'rgb(31 154 50)' }}>Probabilistic Outcomes</h3>
+                    <button onClick={handlePdfDownloadRequest} disabled={isGeneratingPdf} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', background: '#4b5563', color: 'white', borderRadius: '0.5rem', fontWeight: '600', fontSize: '0.875rem', cursor: 'pointer', border: 'none', transition: 'all 0.3s' }}>
+                        {isGeneratingPdf ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Download size={16} /> }
+                        {isGeneratingPdf ? 'Generating...' : 'Download PDF'}
+                    </button>
                 </div>
-              </div>
+                <div className="row mb-4">
+                    <div className="col-md-3 col-6 mb-3"><StatCard label="Worst Case (10%)" value={formatNumber(worstCase?.finalValue)} color="red" /></div>
+                    <div className="col-md-3 col-6 mb-3"><StatCard label="Most Likely (50%)" value={formatNumber(medianCase?.finalValue)} color="purple" /></div>
+                    <div className="col-md-3 col-6 mb-3"><StatCard label="Best Case (90%)" value={formatNumber(bestCase?.finalValue)} color="green" /></div>
+                    <div className="col-md-3 col-6 mb-3"><StatCard label="Sharpe Ratio" value={sharpeRatio?.toFixed(2) || 'N/A'} color="blue" tooltip="Measures risk-adjusted return. Higher is better." /></div>
+                </div>
+                <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '0.5rem', textAlign: 'center', border: '1px solid #e5e7eb' }}>
+                    <p style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151' }}>Most Likely Post-Tax Value: <span style={{ color: '#10b981' }}>{formatNumber(medianTax.postTaxValue)}</span></p>
+                    <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>(After est. LTCG tax of {formatNumber(medianTax.tax)})</p>
+                </div>
             </div>
-
-            {/* Rolling returns */}
-            <div className="col-xl-12 mil-mt-20">
-              <div style={{ padding: 12 }}>
-                <RollingReturns medianCase={monteCarloResults.medianCase} lumpSum={lumpSum} />
-              </div>
+            <div id="chart-section" style={{ height: '380px', width: '100%', marginTop: '1.5rem' }}>
+                <ResponsiveContainer>
+                    <ComposedChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis dataKey="year" tickFormatter={(tick) => `Yr ${tick}`} stroke="#6b7280" style={{ fontSize: '0.75rem' }} />
+                        <YAxis tickFormatter={(val) => formatNumber(val, 0)} width={65} stroke="#6b7280" style={{ fontSize: '0.75rem' }} />
+                        <Tooltip contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #e0e0e0', borderRadius: '8px', fontSize: '0.875rem' }} formatter={(value) => formatNumber(value)}/>
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} iconSize={10} />
+                        <Area type="monotone" dataKey="worst" name="Worst Case" stroke="#fca5a5" fill="#fee2e2" fillOpacity={0.6} dot={false} />
+                        <Area type="monotone" dataKey="best" name="Best Case" stroke="#86efac" fill="#dcfce7" fillOpacity={0.6} dot={false} />
+                        <Line type="monotone" dataKey="median" name="Most Likely" stroke="#a855f7" strokeWidth={3} dot={false} />
+                    </ComposedChart>
+                </ResponsiveContainer>
             </div>
-          </div>
+            <RollingReturnsDisplay data={useMemo(() => {
+                if (!medianCase) return { '1Y': [], '3Y': [], '5Y': [] };
+                const calcRollingReturns = (period) => {
+                    const returns = [];
+                    const values = [lumpSum, ...medianCase.yearlyValues];
+                    if (values.length <= period) return [];
+                    for (let i = period; i < values.length; i++) {
+                        const startValue = values[i-period];
+                        const endValue = values[i];
+                        let cagr = 0;
+                        if (startValue > 0) cagr = (Math.pow(endValue / startValue, 1/period) - 1) * 100;
+                        returns.push({ year: i, return: parseFloat(cagr.toFixed(2)) });
+                    }
+                    return returns;
+                }
+                return { '1Y': calcRollingReturns(1), '3Y': calcRollingReturns(3), '5Y': calcRollingReturns(5) };
+            }, [medianCase, lumpSum])} />
+            {yearlyBreakdown && <YearlyBreakdownTable data={yearlyBreakdown} formatNumber={formatNumber} />}
         </div>
-      </div>
-
-      {/* Styles: keep your UI colours; narrow asset sliders to avoid overlap */}
-      <style jsx>{`
-        .tab-row { display:flex; gap:12px; align-items:center; margin-bottom:14px; }
-        .tab { background:#f6faf8; border:0; padding:8px 14px; border-radius:999px; color:#7a8b86; font-weight:600; cursor:pointer; }
-        .tab.active { background:#e9fff5; color:${ACCENT_DARK}; box-shadow: inset 0 0 0 1px rgba(6,167,119,0.08); }
-
-        .card-form { background:#fff; padding:22px; border-radius:12px; border:1px solid #eef2f3; }
-        .card-chart { background:#fff; padding:18px; border-radius:12px; border:1px solid #eef2f3; display:flex; flex-direction:column; gap:8px; overflow: visible; }
-
-        .preset { background:#f5fbf8; border-radius:8px; border:1px solid #e6f5ef; padding:8px 12px; color:${ACCENT_DARK}; cursor:pointer; font-weight:600; }
-        .invest-btn { background: ${ACCENT}; color: white; border: none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; box-shadow: 0 8px 30px rgba(6,167,119,0.12); }
-
-        .summary-small { display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:12px; align-items:center; margin-top:10px; }
-        .small-label { font-size:12px; color:#7b8790; }
-        .small-val { font-weight:700; font-size:16px; margin-top:6px; }
-
-        .table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-        .table th { background:#fafbfc; padding:12px 16px; text-align:left; color:#333; font-weight:700; border-bottom:1px solid #eef2f3; }
-        .table td { padding:12px 16px; border-bottom:1px solid #f1f4f6; color:#333; }
-
-        .positive { color: #065f46; font-weight:700; }
-        .negative { color: #7f1d1d; font-weight:700; }
-
-        .legend-swatch { width:18px; height:18px; border-radius:6px; display:inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.04); margin-right:8px; }
-        .donut-legend { display:flex; flex-direction:column; gap:8px; margin-top: 8px; }
-
-        /* --- IMPORTANT: asset input sizing to prevent overlap --- */
-        .asset-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .asset-row .small-input { width: 72px; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(6,167,119,0.06); text-align: center; font-weight:700; background:#ecfff6; color:${ACCENT_DARK}; }
-
-        /* Asset range base style */
-        .asset-row .asset-range { -webkit-appearance: none; appearance: none; height: 8px; width: 220px; border-radius: 999px; outline: none; }
-        .asset-row .asset-range::-webkit-slider-thumb { -webkit-appearance: none; width:14px; height:14px; border-radius:50%; background:${ACCENT}; box-shadow:0 2px 6px rgba(6,167,119,0.12); margin-top:-3px; border: none; }
-        .asset-row .asset-range::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:${ACCENT}; border:none; }
-        .asset-row .asset-range::-webkit-slider-runnable-track { height: 8px; background: #e9e9e9; border-radius: 999px; }
-        .asset-row .asset-range::-moz-range-track { height: 8px; background: #e9e9e9; border-radius: 999px; }
-
-        /* Range input (main controls) */
-        .range-input { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; outline: none; background: #e9e9e9; }
-        .range-input::-webkit-slider-runnable-track { height: 8px; background: #e9e9e9; border-radius: 999px; }
-        .range-input::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: ${ACCENT}; margin-top: -4px; box-shadow: 0 2px 6px rgba(6,167,119,0.18); border: none; }
-        .range-input::-moz-range-track { height: 8px; background: #e9e9e9; border-radius: 999px; }
-        .range-input::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: ${ACCENT}; border: none; }
-
-        /* Make sure range doesn't overflow its container */
-        .asset-row input[type="range"] { max-width: calc(100% - 320px); }
-
-        @media (max-width: 1200px) {
-          .asset-row .asset-range { width: 180px; }
-          .asset-row input[type="range"] { max-width: calc(100% - 300px); }
-        }
-
-        @media (max-width: 992px) {
-          .summary-small { grid-template-columns: 1fr 1fr; }
-          .card-chart { margin-top:14px; }
-          .asset-row .asset-range { width: 140px; }
-          .asset-row input[type="range"] { max-width: calc(100% - 240px); }
-        }
-      `}</style>
-    </PlaxLayout>
-  );
+    );
 }
 
-/* ---------------- Helpers & small components ---------------- */
-
-function totalAllocationOk(assets) {
-  const total = assets.reduce((s, a) => s + Number(a.allocation || 0), 0);
-  return total === 100;
+function YearlyBreakdownTable({ data, formatNumber }) {
+    return (
+        <div id="yearly-breakdown-section">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 text-center">Yearly Breakdown (Most Likely Path)</h3>
+            <div style={{ overflow: 'auto', borderRadius: '0.5rem', border: '1px solid #e5e7eb', maxHeight: '300px' }}>
+                <table style={{ width: '100%', fontSize: '0.875rem', textAlign: 'left', color: '#6b7280' }}>
+                    <thead style={{ background: '#f3f4f6', fontSize: '0.75rem', color: '#374151', textTransform: 'uppercase', position: 'sticky', top: 0 }}>
+                        <tr><th style={{ padding: '0.75rem 1rem' }}>Year</th><th style={{ padding: '0.75rem 1rem' }}>Invested</th><th style={{ padding: '0.75rem 1rem' }}>Return</th><th style={{ padding: '0.75rem 1rem' }}>Interest</th><th style={{ padding: '0.75rem 1rem' }}>Balance</th></tr>
+                    </thead>
+                    <tbody style={{ background: 'white' }}>
+                        {data.map(row => (
+                            <tr key={row.year} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                                <td style={{ padding: '0.75rem 1rem', fontWeight: '500', color: '#111827' }}>{row.year}</td>
+                                <td style={{ padding: '0.75rem 1rem' }}>{formatNumber(row.invested)}</td>
+                                <td style={{ padding: '0.75rem 1rem', fontWeight: '600', color: row.returnRate >= 0 ? '#10b981' : '#ef4444' }}>{row.returnRate}%</td>
+                                <td style={{ padding: '0.75rem 1rem' }}>{formatNumber(row.interest)}</td>
+                                <td style={{ padding: '0.75rem 1rem', fontWeight: 'bold', color: '#111827' }}>{formatNumber(row.closingBalance)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    );
 }
 
-function InputSlider({ label, Icon, value, setValue, min = 0, max = 100, step = 1, tooltip, inputType }) {
-  const handleChange = (e) => {
-    const v = e.target.value === "" ? min : parseFloat(e.target.value);
-    if (isNaN(v)) return;
-    setValue(Math.max(min, Math.min(max, v)));
-  };
-
-  const suffix = inputType === "percent" ? "%" : inputType === "year" ? "Yrs" : inputType === "currency" ? "" : "";
-
-  // compute percent for fill (avoid NaN)
-  const minNum = Number(min);
-  const maxNum = Number(max);
-  const valNum = Number(value || 0);
-  const pct = maxNum > minNum ? Math.round(((valNum - minNum) / (maxNum - minNum)) * 100) : 0;
-
-  return (
-    <div style={{ display: "grid", gap: 6 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <Icon size={16} color={BRAND_A} /> <strong>{label}</strong>
+function RollingReturnsDisplay({ data }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }} id="rolling-returns-section">
+            <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: '#1f2937', textAlign: 'center', marginBottom: '0.5rem' }}>Rolling Returns Analysis (Median Path)</h3>
+            <div className="row">
+                <div className="col-md-4 col-sm-6 mb-3"><RollingReturnCard title="1-Year Rolling" data={data['1Y']} color="indigo" /></div>
+                <div className="col-md-4 col-sm-6 mb-3"><RollingReturnCard title="3-Year CAGR" data={data['3Y']} color="purple" /></div>
+                <div className="col-md-4 col-sm-12 mb-3"><RollingReturnCard title="5-Year CAGR" data={data['5Y']} color="green" /></div>
+            </div>
+            <div style={{ height: '220px', width: '100%' }}>
+                <ResponsiveContainer>
+                    <BarChart data={data['1Y']} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="year" tickFormatter={(tick) => `End Yr ${tick}`} style={{ fontSize: '0.75rem' }} /><YAxis tickFormatter={(val) => `${val}%`} style={{ fontSize: '0.75rem' }} /><Tooltip formatter={(value) => [`${value}%`, '1-Yr Return']} cursor={{fill: 'rgba(230, 230, 230, 0.5)'}} />
+                        <Bar name="1-Year Rolling Return" dataKey="return" >
+                            {data['1Y'].map((entry, index) => ( <Cell key={`cell-${index}`} fill={entry.return >= 0 ? '#22c55e' : '#ef4444'} /> ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
         </div>
-        {tooltip && <div style={{ color: "#6b7280", fontSize: 12 }}>{tooltip}</div>}
-      </div>
-      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        <div style={{ minWidth: 120, display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, background: "#ecfff6" }}>
-          {inputType === "currency" && <span style={{ color: "#065f46", fontWeight: 700 }}>₹</span>}
-          <input
-            type="number"
-            value={typeof value === "number" && inputType === "currency" ? Math.round(value) : value}
-            onChange={handleChange}
-            min={min}
-            max={max}
-            step={step}
-            style={{ border: "none", background: "transparent", textAlign: "right", fontWeight: 700, color: ACCENT_DARK }}
-          />
-          <div style={{ color: "#6b7280", fontWeight: 700 }}>{suffix}</div>
+    )
+}
+
+function RollingReturnCard({title, data, color}) {
+    if (!data || data.length === 0) {
+        return <div style={{ padding: '0.75rem', borderRadius: '0.5rem', background: '#f9fafb', border: '1px solid #e5e7eb', textAlign: 'center', color: '#6b7280', fontSize: '0.75rem' }}>Not enough data for {title}.</div>;
+    }
+    const returns = data.map(d => d.return);
+    const avg = (returns.reduce((a,b) => a + b, 0) / returns.length).toFixed(2);
+    const max = Math.max(...returns).toFixed(2);
+    const min = Math.min(...returns).toFixed(2);
+    const colorClasses = { indigo: { bg: '#eef2ff', border: '#c7d2fe', text: '#3730a3' }, purple: { bg: '#faf5ff', border: '#e9d5ff', text: '#6b21a8' }, green: { bg: '#ecfdf5', border: '#bbf7d0', text: '#065f46' } }
+    const c = colorClasses[color] || colorClasses.indigo;
+    return (
+        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', border: `1px solid ${c.border}`, background: c.bg, color: c.text }}>
+            <h4 style={{ fontWeight: 'bold', textAlign: 'center', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{title}</h4>
+            <div style={{ textAlign: 'center', fontWeight: '800', fontSize: '1.25rem', marginBottom: '0.5rem' }}>{avg}% <span style={{ fontWeight: 'normal', fontSize: '0.625rem' }}>(Avg)</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.625rem' }}><span style={{ color: '#10b981' }}>Max {max}%</span><span style={{ color: '#ef4444' }}>Min {min}%</span></div>
         </div>
-        <input
-          type="range"
-          min={min}
-          max={max}
-          step={step}
-          value={value}
-          onChange={(e) => setValue(Number(e.target.value))}
-          className="range-input"
-          style={{ flex: 1, minWidth: 0, background: `linear-gradient(90deg, ${ACCENT} ${pct}%, #e9e9e9 ${pct}%)` }}
-        />
-      </div>
+    )
+}
+
+function PdfFormModal({ on_Submit, on_Cancel }) {
+    const [formData, setFormData] = useState({ name: '', email: '', phone: '', location: '' });
+    const [errors, setErrors] = useState({});
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+    const validate = () => {
+        const newErrors = {};
+        if (!formData.name) newErrors.name = 'Name is required';
+        if (!formData.email) newErrors.email = 'Email is required';
+        else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
+        if (!formData.phone) newErrors.phone = 'Phone number is required';
+        if (!formData.location) newErrors.location = 'Location is required';
+        return newErrors;
+    };
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const newErrors = validate();
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+        } else {
+            setErrors({});
+            on_Submit(formData);
+        }
+    };
+    return (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 50 }}>
+            <div style={{ background: 'white', padding: '2rem', borderRadius: '0.5rem', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)', width: '100%', maxWidth: '28rem' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>Enter Details to Download</h2>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <FormInput name="name" label="Full Name" value={formData.name} onChange={handleChange} error={errors.name} />
+                    <FormInput name="email" type="email" label="Email Address" value={formData.email} onChange={handleChange} error={errors.email} />
+                    <FormInput name="phone" type="tel" label="Phone Number" value={formData.phone} onChange={handleChange} error={errors.phone} />
+                    <FormInput name="location" label="Location" value={formData.location} onChange={handleChange} error={errors.location} />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', paddingTop: '1rem' }}>
+                        <button type="button" onClick={on_Cancel} style={{ padding: '0.5rem 1rem', background: '#e5e7eb', color: '#1f2937', borderRadius: '0.5rem', cursor: 'pointer', border: 'none' }}>Cancel</button>
+                        <button type="submit" style={{ padding: '0.5rem 1rem', background: 'rgb(242 116 87)', color: 'white', borderRadius: '0.5rem', cursor: 'pointer', border: 'none' }}>Submit & Download</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
+const FormInput = ({ name, label, type = 'text', value, onChange, error }) => (
+    <div>
+        <label htmlFor={name} style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}>{label}</label>
+        <input type={type} id={name} name={name} value={value} onChange={onChange} style={{ marginTop: '0.25rem', display: 'block', width: '100%', padding: '0.5rem 0.75rem', border: error ? '1px solid #ef4444' : '1px solid #d1d5db', borderRadius: '0.375rem', boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)' }} />
+        {error && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem' }}>{error}</p>}
     </div>
-  );
+);
+
+function InputSlider({ label, Icon, value, setValue, min, max, step, tooltip, inputType }) {
+    const handleInputChange = (e) => {
+        let numericValue = e.target.value === '' ? min : parseFloat(e.target.value);
+        if (isNaN(numericValue)) numericValue = min;
+        if (numericValue > max) numericValue = max;
+        if (numericValue < min) numericValue = min;
+        setValue(numericValue);
+    };
+    const getSuffix = () => inputType === 'percent' ? '%' : (inputType === 'year' ? 'Yrs' : '');
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <label style={{ fontWeight: '600', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1 1 auto', minWidth: '0', fontSize: '0.875rem' }}>
+                    <Icon size={18} style={{ color: 'rgb(31 154 50)', flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                     {tooltip && <div style={{ position: 'relative', display: 'flex', alignItems: 'center', group: true, flexShrink: 0 }}><Info size={14} style={{ color: '#6b7280', cursor: 'pointer' }} /><span style={{ position: 'absolute', bottom: '100%', zIndex: 10, marginBottom: '0.5rem', width: '12rem', padding: '0.5rem', fontSize: '0.75rem', color: 'white', background: '#1f2937', borderRadius: '0.375rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', opacity: 0, pointerEvents: 'none' }}>{tooltip}</span></div>}
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', border: '1px solid #d1d5db', borderRadius: '0.375rem', padding: '0.25rem 0.5rem', background: 'white', flexShrink: 0 }}>
+                    {inputType === 'currency' && <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>₹</span>}
+                    <input type="number" value={inputType === 'percent' || inputType === 'year' ? value : Math.round(value)} onChange={handleInputChange} onBlur={(e) => { if(e.target.value === '') setValue(min); }} min={min} max={max} step={step} style={{ width: '4rem', textAlign: 'right', fontWeight: 'bold', color: 'rgb(31 154 50)', background: 'transparent', border: 'none', outline: 'none', fontSize: '0.875rem' }} />
+                    {getSuffix() && <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>{getSuffix()}</span>}
+                </div>
+            </div>
+            <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => setValue(Number(e.target.value))} style={{ width: '100%', height: '0.5rem', background: '#e5e7eb', borderRadius: '0.5rem', appearance: 'none', cursor: 'pointer', accentColor: 'rgb(31 154 50)', marginTop: '0.5rem', marginBottom: '0.5rem' }} />
+        </div>
+    );
+}
+
+function StatCard({ label, value, color, tooltip }) {
+    const colorClasses = {
+        red: { border: '#ef4444', bg: '#fee2e2', text: '#991b1b' },
+        green: { border: '#10b981', bg: '#d1fae5', text: '#065f46' },
+        purple: { border: '#a855f7', bg: '#f3e8ff', text: '#6b21a8' },
+        blue: { border: '#3b82f6', bg: '#dbeafe', text: '#1e40af' },
+    };
+    const c = colorClasses[color] || colorClasses.blue;
+    return (
+        <div style={{ padding: '0.75rem', borderRadius: '0.5rem', borderTop: `4px solid ${c.border}`, background: c.bg, color: c.text, minHeight: '85px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: '500', color: '#6b7280', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', flexWrap: 'wrap', textAlign: 'center' }}>
+                {label}
+                {tooltip && <div style={{ position: 'relative', display: 'flex', alignItems: 'center', group: true }}><Info size={12} style={{ color: '#9ca3af', cursor: 'pointer' }} /><span style={{ position: 'absolute', bottom: '100%', zIndex: 10, marginBottom: '0.5rem', width: '12rem', padding: '0.5rem', fontSize: '0.75rem', color: 'white', background: '#1f2937', borderRadius: '0.375rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', opacity: 0, pointerEvents: 'none' }}>{tooltip}</span></div>}
+            </div>
+            <p style={{ fontSize: '1.125rem', fontWeight: 'bold', marginTop: '0.5rem', textAlign: 'center', wordBreak: 'break-word' }}>{value}</p>
+        </div>
+    );
 }
 
 function ToggleSwitch({ label, Icon, enabled, setEnabled, tooltip }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", fontWeight: 700 }}>
-        <Icon size={16} color={BRAND_A} /> {label} {tooltip && <span style={{ color: "#6b7280", fontSize: 12, marginLeft: 6 }}>{tooltip}</span>}
-      </div>
-      <button
-        onClick={() => setEnabled(!enabled)}
-        style={{
-          width: 48,
-          height: 26,
-          borderRadius: 999,
-          background: enabled ? BRAND_A : "#e5e7eb",
-          display: "flex",
-          alignItems: "center",
-          padding: 3,
-          border: "none",
-        }}
-        aria-pressed={enabled}
-      >
-        <div style={{ width: 20, height: 20, borderRadius: "50%", background: "#fff", transform: enabled ? "translateX(22px)" : "translateX(0)", transition: "transform .18s" }} />
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <label style={{ fontWeight: '600', color: '#374151', display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+        <Icon size={20} style={{ color: 'rgb(31 154 50)' }} />{label}
+        {tooltip && <div style={{ position: 'relative', display: 'flex', alignItems: 'center', group: true }}><Info size={16} style={{ color: '#6b7280', cursor: 'pointer' }} /><span style={{ position: 'absolute', bottom: '100%', zIndex: 10, marginBottom: '0.5rem', width: '12rem', padding: '0.5rem', fontSize: '0.75rem', color: 'white', background: '#1f2937', borderRadius: '0.375rem', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', opacity: 0, pointerEvents: 'none' }}>{tooltip}</span></div>}
+      </label>
+      <button type="button" style={{ width: '2.75rem', height: '1.5rem', borderRadius: '9999px', background: enabled ? 'rgb(242 116 87)' : '#e5e7eb', display: 'inline-flex', flexShrink: 0, cursor: 'pointer', alignItems: 'center', padding: '0.1875rem', border: '2px solid transparent', transition: 'colors 0.2s' }} onClick={() => setEnabled(!enabled)}>
+        <span style={{ width: '1.25rem', height: '1.25rem', display: 'inline-block', transform: enabled ? 'translateX(1.25rem)' : 'translateX(0)', borderRadius: '50%', background: 'white', boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)', transition: 'transform 0.2s' }} />
       </button>
-    </div>
-  );
-}
-
-function RollingReturns({ medianCase, lumpSum }) {
-  const calc = (period) => {
-    if (!medianCase || !medianCase.yearlyTotals) return [];
-    const values = [lumpSum, ...medianCase.yearlyTotals];
-    const out = [];
-    for (let i = period; i < values.length; i++) {
-      const start = values[i - period];
-      const end = values[i];
-      let cagr = 0;
-      if (start > 0) cagr = (Math.pow(end / start, 1 / period) - 1) * 100;
-      out.push({ year: i, return: parseFloat(cagr.toFixed(2)) });
-    }
-    return out;
-  };
-
-  const r1 = useMemo(() => calc(1), [medianCase]);
-  const r3 = useMemo(() => calc(3), [medianCase]);
-  const r5 = useMemo(() => calc(5), [medianCase]);
-
-  return (
-    <div>
-      <h3 style={{ marginBottom: 8 }}>Rolling Returns (Median Path)</h3>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        <SmallReturnCard title="1-Year" data={r1} color="indigo" />
-        <SmallReturnCard title="3-Year" data={r3} color="purple" />
-        <SmallReturnCard title="5-Year" data={r5} color="green" />
-      </div>
-
-      <div style={{ height: 230, marginTop: 12 }}>
-        <ResponsiveContainer>
-          <BarChart data={r1}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-            <XAxis dataKey="year" tickFormatter={(t) => `Yr ${t}`} />
-            <YAxis tickFormatter={(v) => `${v}%`} />
-            <Tooltip formatter={(v) => `${v}%`} />
-            <Bar dataKey="return">
-              {r1.map((entry, idx) => (
-                <ReCell key={idx} fill={entry.return >= 0 ? "#16a34a" : "#ef4444"} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
-}
-
-function SmallReturnCard({ title, data, color }) {
-  if (!data || data.length === 0) {
-    return <div style={{ padding: 12, borderRadius: 8, background: "#f8fafc", border: "1px solid #eef2f3", textAlign: "center" }}>Not enough data for {title}</div>;
-  }
-  const vals = data.map((d) => d.return);
-  const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2);
-  const max = Math.max(...vals).toFixed(2);
-  const min = Math.min(...vals).toFixed(2);
-  const map = {
-    indigo: { bg: "#eef2ff", border: "#c7d2fe", text: "#3730a3" },
-    purple: { bg: "#faf5ff", border: "#e9d5ff", text: "#6b21a8" },
-    green: { bg: "#ecfdf5", border: "#bbf7d0", text: "#065f46" },
-  };
-  const c = map[color] || map.indigo;
-
-  return (
-    <div style={{ padding: 12, borderRadius: 8, border: `1px solid ${c.border}`, background: c.bg, color: c.text }}>
-      <div style={{ textAlign: "center", fontWeight: 700 }}>{title}</div>
-      <div style={{ textAlign: "center", fontSize: 20, fontWeight: 800, marginTop: 6 }}>{avg}% <span style={{ fontWeight: 400, fontSize: 12 }}>(Avg)</span></div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-        <div style={{ color: "#16a34a" }}>Max {max}%</div>
-        <div style={{ color: "#ef4444" }}>Min {min}%</div>
-      </div>
     </div>
   );
 }

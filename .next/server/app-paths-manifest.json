@@ -1,8 +1,10 @@
 {
-  "/investment-advisory/page": "app/investment-advisory/page.js",
-  "/founder/page": "app/founder/page.js",
-  "/page": "app/page.js",
-  "/research-analysis/page": "app/research-analysis/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/lump-sum-calculator/page": "app/lump-sum-calculator/page.js",
   "/sip-calculator/page": "app/sip-calculator/page.js",
-  "/investor-ia/page": "app/investor-ia/page.js"
+  "/founder/page": "app/founder/page.js",
+  "/investor-ia/page": "app/investor-ia/page.js",
+  "/investment-advisory/page": "app/investment-advisory/page.js",
+  "/retirement-calculator/page": "app/retirement-calculator/page.js",
+  "/investor-ra/page": "app/investor-ra/page.js"
 }

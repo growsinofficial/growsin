@@ -1,8 +1,0 @@
-{
-  "/investor-ra/page": "app/investor-ra/page.js",
-  "/investor-ia/page": "app/investor-ia/page.js",
-  "/disclosure/page": "app/disclosure/page.js",
-  "/investment-advisory/page": "app/investment-advisory/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/page": "app/page.js"
-}

@@ -369,13 +369,13 @@ const InvestmentAdvisoryPage = () => {
                         <li>Retirement & Pension Planning</li>
                         <li>Debt & Credit Advisory</li>
                       </ul>
-                      <ul>
-                        <li>₹34,999 (one-time fee) <br />
-                        This includes a complete, end-to-end financial plan with full support for the first month. <br />
-                        Ongoing Advisory (Optional) <br />
-If you’d like continued monthly guidance, monitoring, and plan updates after the first month, ongoing advisory is available at:
-₹2,499 per month, billed for a 6-month cycle.</li>
-                      </ul>
+                      <div style={{ marginTop: '1.25rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}>
+                        <p style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>₹34,999 (one-time fee)</p>
+                        <p style={{ fontSize: window.innerWidth < 768 ? '0.6875rem' : '0.75rem', color: '#4b5563', lineHeight: '1.5', marginBottom: '0.75rem' }}>This includes a complete, end-to-end financial plan with full support for the first month.</p>
+                        <p style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', color: '#111827', marginTop: '0.75rem', marginBottom: '0.5rem' }}>Ongoing Advisory (Optional)</p>
+                        <p style={{ fontSize: window.innerWidth < 768 ? '0.6875rem' : '0.75rem', color: '#4b5563', lineHeight: '1.5' }}>If you'd like continued monthly guidance, monitoring, and plan updates after the first month,</p>
+                        <p style={{ fontSize: window.innerWidth < 768 ? '0.75rem' : '0.8125rem', fontWeight: '600', color: '#1F9A32', marginTop: '0.5rem' }}>₹2,499 per month, billed for a 6-month cycle.</p>
+                      </div>
                     </div>
                     <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <a href="#plan-1" onClick={(e) => handleNavClick('plan-1', e)} className="cta-button" style={{ padding: '0.625rem', fontSize: '0.75rem', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#1f2937', borderRadius: '0.5rem' }}>View Details</a>

@@ -14,6 +14,22 @@ export default function InvestorIACharterPage() {
 
       <div className="mil-blog-list mil-shell">
         <div className="container">
+          
+          {/* Download Certificate Button */}
+          <div className="certificate-download-section">
+            <a 
+              href="/pdf/ia.pdf" 
+              download="IA-Certificate.pdf"
+              className="download-certificate-btn"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download IA Certificate (PDF)
+            </a>
+          </div>
 
           {/* ======================================================= */}
           {/* SECTION: SEBI CIRCULAR DETAILS                         */}
@@ -201,7 +217,7 @@ export default function InvestorIACharterPage() {
           <h3 className="main-title">ANNEXURE B – Complaint Data Format</h3>
 
           <div className="content-block">
-            <p><strong>Data for the month ending: ____________</strong></p>
+            <p><strong>Data for the month ending: 31 October 2025</strong></p>
           </div>
 
           {/* Monthly Complaints Table */}
@@ -220,10 +236,10 @@ export default function InvestorIACharterPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>1</td><td>Investors</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>2</td><td>SEBI (SCORES)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>3</td><td>Other Sources</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colSpan="8"><strong>Grand Total</strong></td></tr>
+                <tr><td>1</td><td>Investors</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>2</td><td>SEBI (SCORES)</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>3</td><td>Other Sources</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td><td>NA</td></tr>
+                <tr><td colSpan="8"><strong>Grand Total: 0</strong></td></tr>
               </tbody>
             </table>
           </div>
@@ -244,37 +260,9 @@ export default function InvestorIACharterPage() {
                 </tr>
               </thead>
               <tbody>
-                <tr><td>April</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>May</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>June</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>...</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>March</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colSpan="5"><strong>Grand Total</strong></td></tr>
-              </tbody>
-            </table>
-          </div>
-
-
-          {/* Annual Trend */}
-          <h3 className="main-title">Trend of Annual Disposal of Complaints</h3>
-
-          <div className="table-wrapper">
-            <table className="styled-table">
-              <thead>
-                <tr>
-                  <th>Year</th>
-                  <th>Carried Forward</th>
-                  <th>Received</th>
-                  <th>Resolved</th>
-                  <th>Pending</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr><td>2021-22</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>2022-23</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>2023-24</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td>20XX-XX</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td colSpan="5"><strong>Grand Total</strong></td></tr>
+                <tr><td>September</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td>October</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr><td colSpan="5"><strong>Grand Total: 0</strong></td></tr>
               </tbody>
             </table>
           </div>
@@ -357,6 +345,38 @@ export default function InvestorIACharterPage() {
           border-radius: 12px;
           padding: 14px;
           background: white;
+          margin: 20px 0;
+        }
+
+        .certificate-download-section {
+          display: flex;
+          justify-content: center;
+          margin: 30px 0 40px;
+        }
+
+        .download-certificate-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 14px 28px;
+          background: linear-gradient(90deg, #175ee2 0%, #7d2ae8 100%);
+          color: white;
+          text-decoration: none;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 16px;
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 12px rgba(23, 94, 226, 0.2);
+        }
+
+        .download-certificate-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 20px rgba(23, 94, 226, 0.3);
+          color: white;
+        }
+
+        .download-certificate-btn svg {
+          flex-shrink: 0;
         }
       `}</style>
 

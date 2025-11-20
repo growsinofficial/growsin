@@ -490,16 +490,16 @@ export default function RefundPolicyPage() {
 
             <h3>Contact Information</h3>
             <p>
-              Email (Privacy &amp; Refunds): <a href="mailto:privacy@growsin.in">privacy@growsin.in</a><br />
+              Email (Compliance): <a href="mailto:compliance@growsin.com">compliance@growsin.com</a><br />
               Email (Support): <a href="mailto:support@growsin.in">support@growsin.in</a><br />
-              Registered Office Address: [Insert Your Official Address Here]<br />
-              Contact Number: [Insert Contact Number Here]
+              Registered Office Address: Door No. 14-1-3/5, 2nd Floor, Donkada Colony, Aganam, Gajuwaka Mandal, Visakhapatnam District., VISAKHAPATNAM, ANDHRA PRADESH, 530046<br />
+              Contact Number: 8500660421
             </p>
           </section>
 
           <footer className="policy-footer" aria-label="policy meta">
             <p className="mil-text-s mil-soft">Effective date: <strong>2025-11-14</strong></p>
-            <p className="mil-text-s mil-soft">Contact: <a href="mailto:privacy@growsin.in">privacy@growsin.in</a></p>
+            <p className="mil-text-s mil-soft">Contact: <a href="mailto:compliance@growsin.com">compliance@growsin.com</a></p>
           </footer>
         </article>
 

@@ -31,12 +31,9 @@ export default function DisclosuresPage() {
               <div className="mil-card">
                 <div className="mil-reg-grid">
                   <div><span className="mil-label">Name</span><strong>Murali Krishna</strong></div>
-                  <div><span className="mil-label">SEBI Reg. No. (IA)</span><strong>INAXXXXXXXX</strong></div>
-                  <div><span className="mil-label">SEBI Reg. No. (RA)</span><strong>INHXXXXXXXX</strong></div>
-                  <div><span className="mil-label">Category</span><strong>Individual</strong></div>
-                  <div><span className="mil-label">Validity</span><strong>Active as on date</strong></div>
+                  <div><span className="mil-label">SEBI Reg. No. (IA)</span><strong>INA000021261</strong></div>
+                  <div><span className="mil-label">SEBI Reg. No. (RA)</span><strong>INH000023667</strong></div>
                   <div><span className="mil-label">Mode of Advisory</span><strong>Non-execution, fee-only</strong></div>
-                  <div><span className="mil-label">Jurisdiction</span><strong>India (pan-India digitally)</strong></div>
                 </div>
               </div>
             </div>

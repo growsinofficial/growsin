@@ -71,10 +71,25 @@
       "static/chunks/main-app.js",
       "static/chunks/app/investor-ra/page.js"
     ],
-    "/_not-found/page": [
+    "/certificate/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/certificate/page.js"
+    ],
+    "/terms-conditions/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/terms-conditions/page.js"
+    ],
+    "/refund-policy/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/refund-policy/page.js"
+    ],
+    "/disclosure/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/disclosure/page.js"
     ]
   }
 }

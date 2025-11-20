@@ -27,9 +27,9 @@ export default function TermsPage() {
             <h2>1. Introduction, Applicability, and Binding Nature of these Terms</h2>
 
             <p>
-              1.1 These Terms and Conditions ("Terms") constitute a legally binding agreement between Mr. [Your Full Legal Name], an individual duly
-              registered with the Securities and Exchange Board of India ("SEBI") as a Registered Investment Adviser (Registration No. [RIA Reg. No.]) under the
-              SEBI (Investment Advisers) Regulations, 2013, and as a Registered Research Analyst (Registration No. [RA Reg. No.]) under the SEBI
+              1.1 These Terms and Conditions ("Terms") constitute a legally binding agreement between Mr. Murali krishna Sivala, an individual duly
+              registered with the Securities and Exchange Board of India ("SEBI") as a Registered Investment Adviser under the
+              SEBI (Investment Advisers) Regulations, 2013, and as a Registered Research Analyst (Registration No. INH000023667) under the SEBI
               (Research Analysts) Regulations, 2014, operating under and providing services through the brand name "Growsin" (hereinafter referred to as
               "Growsin," "we," "us," or "our"), and you, being any person who chooses to access, browse, subscribe to, interact with, or otherwise make use of our
               website, digital platforms, advisory services, research publications, reports, newsletters, communications, software tools, or any related
@@ -149,8 +149,8 @@ export default function TermsPage() {
             </p>
 
             <ul>
-              <li>(a) a Registered Investment Adviser (RIA) under the SEBI (Investment Advisers) Regulations, 2013 (as amended from time to time), bearing Registration No. [RIA Reg. No.]; and</li>
-              <li>(b) a Registered Research Analyst (RA) under the SEBI (Research Analysts) Regulations, 2014 (as amended from time to time), bearing Registration No. [RA Reg. No.].</li>
+              <li>(a) a Registered Investment Adviser (RIA) under the SEBI (Investment Advisers) Regulations, 2013 (as amended from time to time); and</li>
+              <li>(b) a Registered Research Analyst (RA) under the SEBI (Research Analysts) Regulations, 2014 (as amended from time to time), bearing Registration No. INH000023667.</li>
             </ul>
 
             <p>
@@ -455,7 +455,7 @@ export default function TermsPage() {
             </p>
 
             <p>
-              All content, reports, models, tools, templates, methodologies, software, designs, graphics, trade names, brand assets, and any other materials, whether in written, digital, visual, or oral form, provided or made available under the brand name "Growsin", are and shall remain the exclusive intellectual property of Mr. [Your Full Legal Name], SEBI Registered Investment Adviser and Research Analyst, operating as Growsin.
+              All content, reports, models, tools, templates, methodologies, software, designs, graphics, trade names, brand assets, and any other materials, whether in written, digital, visual, or oral form, provided or made available under the brand name "Growsin", are and shall remain the exclusive intellectual property of Mr. MURALI KRISHNA SIVVALA, SEBI Registered Investment Adviser and Research Analyst, operating as Growsin.
             </p>
 
             <p>
@@ -620,7 +620,7 @@ export default function TermsPage() {
             </p>
 
             <p>
-              You agree to fully indemnify, defend, and hold harmless Mr. [Your Full Legal Name], operating under the brand name "Growsin," together with his heirs, successors, representatives, employees, affiliates, agents, contractors, and service providers (collectively, the "Indemnified Parties"), from and against any and all claims, actions, demands, suits, proceedings, investigations, liabilities, losses, damages, penalties, fines, costs, charges, and expenses (including but not limited to reasonable attorneys' fees and litigation costs) which may be incurred, suffered, or sustained, whether directly or indirectly, as a result of, arising from, or in connection with:
+              You agree to fully indemnify, defend, and hold harmless Mr. MURALI KRISHNA SIVVALA, operating under the brand name "Growsin," together with his heirs, successors, representatives, employees, affiliates, agents, contractors, and service providers (collectively, the "Indemnified Parties"), from and against any and all claims, actions, demands, suits, proceedings, investigations, liabilities, losses, damages, penalties, fines, costs, charges, and expenses (including but not limited to reasonable attorneys' fees and litigation costs) which may be incurred, suffered, or sustained, whether directly or indirectly, as a result of, arising from, or in connection with:
             </p>
 
             <ul>
@@ -1047,7 +1047,7 @@ export default function TermsPage() {
             </p>
 
             <p>
-              Our Investor Charter is available on our website at [insert link], and it is hereby incorporated into and forms an integral part of these Terms.
+              Our Investor Charter is available on our website at <a href="https://www.growsin.com/investor-ra">https://www.growsin.com/investor-ra</a> (Research Analyst) and <a href="https://www.growsin.com/investor-ia">https://www.growsin.com/investor-ia</a> (Investment Adviser), and it is hereby incorporated into and forms an integral part of these Terms.
             </p>
 
             <p>
@@ -1063,10 +1063,10 @@ export default function TermsPage() {
             </p>
 
             <p>
-              Name: [Your Name] <br />
-              Email: [Your Email] <br />
-              Phone: [Your Phone] <br />
-              Address: [Your Registered Address]
+              Name: Murali krishna sivvala <br />
+              Email: compliance@growsin.com <br />
+              Phone: 8500660421 <br />
+              Address: Door No. 14-1-3/5, 2nd Floor, Donkada Colony, Aganam, Gajuwaka Mandal, Visakhapatnam District., VISAKHAPATNAM,ANDHRA PRADESH, 530046
             </p>
 
             <p>
@@ -1136,7 +1136,7 @@ export default function TermsPage() {
 
             <ul>
               <li>(a) The tribunal shall consist of a sole arbitrator mutually appointed by both parties. In the event the parties fail to agree upon the arbitrator within fifteen (15) days, the arbitrator shall be appointed in accordance with the rules of the Arbitration and Conciliation Act, 1996.</li>
-              <li>(b) The seat and venue of arbitration shall be [Your City, India].</li>
+              <li>(b) The seat and venue of arbitration shall be VISAKHAPATNAM</li>
               <li>(c) The arbitration proceedings shall be conducted in the English language.</li>
               <li>(d) The arbitral award shall be final, conclusive, and binding on the parties, and may be enforced in any court of competent jurisdiction in India.</li>
             </ul>
@@ -1146,7 +1146,7 @@ export default function TermsPage() {
             </p>
 
             <p>
-              Subject to the provisions of arbitration above, the courts at [Your City/State] shall have exclusive jurisdiction over any proceedings arising out of or relating to these Terms. You expressly waive any right to object to such jurisdiction on grounds of forum non conveniens or otherwise.
+              Subject to the provisions of arbitration above, the courts at VISAKHAPATNAM shall have exclusive jurisdiction over any proceedings arising out of or relating to these Terms. You expressly waive any right to object to such jurisdiction on grounds of forum non conveniens or otherwise.
             </p>
 
             <p>
@@ -1154,7 +1154,7 @@ export default function TermsPage() {
             </p>
 
             <p>
-              Notwithstanding anything contained herein, either party may approach the competent courts at [Your City/State] for interim or injunctive relief in aid of arbitration, pending constitution of the arbitral tribunal or during arbitral proceedings.
+              Notwithstanding anything contained herein, either party may approach the competent courts at visakhapatnam for interim or injunctive relief in aid of arbitration, pending constitution of the arbitral tribunal or during arbitral proceedings.
             </p>
 
             <p>
@@ -1255,20 +1255,13 @@ export default function TermsPage() {
 
             <p>
               Growsin <br />
-              Operated by: Mr. [Your Full Legal Name] <br />
-              SEBI Registered Investment Adviser (RIA) Reg. No.: [RIA Reg. No.] <br />
-              SEBI Registered Research Analyst (RA) Reg. No.: [RA Reg. No.] <br />
-              Compliance Officer: <br />
-              Mr. [Your Full Name] <br />
-              Email: [Your Email Address] <br />
-              Phone: [Your Phone Number] <br />
-              Registered Office Address: <br />
-              [Your Complete Registered Address] <br />
-              Official Website: [Your Website URL]
-            </p>
-
-            <p>
-              <strong>Additional Notes (best practice):</strong> SEBI requires RIAs and RAs to display registration details and contact details prominently on their websites and disclosures. Including Compliance Officer details ensures you meet SEBI's 2021 circular requirement on grievance redressal. Adding Website URL here reinforces authenticity and makes it easier for regulators/clients to verify.
+              (Operated by: Mr. MURALI KRISHNA SIVVALA) <br />
+              SEBI Registered Investment Adviser AND SEBI Registered Research Analyst (RA) Reg. No.: INH000023667 <br />
+              Compliance Officer:Mr. MURALI KRISHNA SIVVAL <br />
+              Email: compliance@growsin.com <br />
+              Phone: 8500660241 <br />
+              Registered Office Address: Door No. 14-1-3/5, 2nd Floor, Donkada Colony, Aganam, Gajuwaka Mandal, Visakhapatnam District., VISAKHAPATNAM,ANDHRA PRADESH, 530046 <br />
+              Official Website: www.growsin.com
             </p>
           </section>
 

@@ -2,121 +2,81 @@ export const planDetailsContent = {
   'plan-1': {
     title: 'Comprehensive Planning: Detailed Services',
     details: `
-      <div class="overflow-x-auto mb-12">
-        <table class="w-full text-sm comparison-table">
-          <thead>
-            <tr>
-              <th>Service Category</th>
-              <th class="our-price-col">Our Price</th>
-              <th>Industry Normal*</th>
-              <th>Industry Average*</th>
-              <th>Industry High*</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>Financial Health Check</td><td class="our-price-col">~ ₹6,000</td><td>₹8,000</td><td>₹12,000</td><td>₹20,000</td></tr>
-            <tr><td>Goal-Based Financial Planning</td><td class="our-price-col">~ ₹7,000</td><td>₹10,000</td><td>₹15,000</td><td>₹25,000</td></tr>
-            <tr><td>Risk Management Planning</td><td class="our-price-col">~ ₹6,000</td><td>₹8,000</td><td>₹12,000</td><td>₹20,000</td></tr>
-            <tr><td>Investment Planning</td><td class="our-price-col">~ ₹7,000</td><td>₹10,000</td><td>₹18,000</td><td>₹30,000</td></tr>
-            <tr><td>Retirement & Pension Planning</td><td class="our-price-col">~ ₹6,000</td><td>₹8,000</td><td>₹15,000</td><td>₹25,000</td></tr>
-            <tr><td>Debt & Credit Advisory</td><td class="our-price-col">~ ₹2,999</td><td>₹5,000</td><td>₹8,000</td><td>₹15,000</td></tr>
-            <tr class="font-bold bg-gray-50 text-base"><td><strong>Total Plan Cost</strong></td><td class="our-price-col"><strong>₹34,999</strong></td><td><strong>~₹49,000</strong></td><td><strong>~₹80,000</strong></td><td><strong>~₹135,000</strong></td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="mt-4 text-xs text-gray-500">* Industry prices are estimates for standalone services and can vary based on the planner's experience and the complexity of the client's situation. Our plan offers these services as a holistic, integrated package for a single fee.</p>
+      <h3>1. Financial Health Check</h3>
       
-      <h3 class="font-display text-3xl font-bold mt-12 mb-4">Our 6-Step Comprehensive Process</h3>
+      <h4>Net Worth & Balance Sheet</h4>
+      <p>Just like a doctor needs your vitals before prescribing medicine, we start by understanding your financial vitals. We conduct an analysis of your total assets (what you own) versus your liabilities (what you owe) to calculate your precise net worth. This helps you understand your true financial position, not just what's in your bank account.</p>
+      <p class="benefit"><strong>Benefit:</strong> This creates a powerful foundation for all future planning. It immediately highlights your financial strengths, exposes hidden risks like unnecessary liabilities, and provides the clarity needed to set realistic and achievable goals.</p>
       
-      <h4>1. Financial Health Check</h4>
-      <div class="process-diagram">
-        <div class="process-flow">
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg></div><p>Onboarding</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg></div><p>Analysis</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg></div><p>Gap Identification</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg></div><p>Action Plan</p></div>
-        </div>
-      </div>
-      <h5>Benefit for You:</h5>
-      <p class="benefit">This foundational step provides a crystal-clear understanding of your current financial standing. It's like a financial MRI, revealing strengths, weaknesses, and hidden opportunities, allowing us to build a plan that is perfectly tailored to you.</p>
+      <h4>Review of Existing Financial Products</h4>
+      <p>Many people accumulate financial products over the years—an insurance policy here, a mutual fund there. We act as your personal financial auditor, assessing every single product for its relevance, cost, and performance. We check if your investments are actually working for you or just costing you money.</p>
+      <p class="benefit"><strong>Benefit:</strong> We help you declutter your financial life. This process optimizes your portfolio by eliminating wasteful expenses on underperforming or irrelevant products and ensures every rupee is aligned with your future goals.</p>
+      
+      <h4>Cash Flow & Budgeting</h4>
+      <p>We help you answer the fundamental question: "Where does my money go?" By tracking your monthly income, expenses, and overall cash surplus or deficit, we create a realistic and non-restrictive budget that works for your lifestyle.</p>
+      <p class="benefit"><strong>Benefit:</strong> This isn't about cutting out everything you enjoy. It's about gaining control. You will increase your savings potential, manage spending effortlessly, and build the lifelong habit of financial discipline.</p>
 
-      <h4>2. Goal-Based Planning</h4>
-      <div class="process-diagram">
-        <div class="process-flow">
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a2 2 0 01-2-2V7a2 2 0 012-2h6l2-2h2l-2 2z" /></svg></div><p>Goal Discovery & Quantification</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div><p>Resource Mapping</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg></div><p>Asset Allocation & Product Selection</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5V4H4zm0 9h5v5H4v-5zm9-9h5v5h-5V4zm0 9h5v5h-5v-5z" /></svg></div><p>Monitoring & Rebalancing</p></div>
-        </div>
-      </div>
-      <h5>Benefit for You:</h5>
-      <p class="benefit">This transforms vague dreams into actionable steps. By attaching a timeline and a number to your goals, we create a motivating roadmap that makes your financial journey purposeful and exciting.</p>
+      <h3>2. Goal-Based Financial Planning</h3>
+      
+      <h4>Goal Mapping & Prioritization</h4>
+      <p>Your financial goals—buying a car, funding education, travelling the world—are the "why" behind your savings. We help you articulate these goals clearly, attach a timeline and a monetary value to them, and then categorize them by urgency and importance.</p>
+      <p class="benefit"><strong>Benefit:</strong> This transforms saving from a chore into an exciting journey. It provides a structured, motivating roadmap, ensuring you are always moving towards what's most important to you.</p>
+      
+      <h4>Child Education / Marriage Planning</h4>
+      <p>We use accurate, inflation-adjusted calculations to estimate the future costs of these major life events. We then design a specific investment strategy, mapping your existing and future investments to ensure the required funds are available when needed.</p>
+      <p class="benefit"><strong>Benefit:</strong> This provides immense peace of mind. You can be confident that you are fully prepared for these critical milestones without having to compromise on your other financial plans.</p>
+      
+      <h4>House Purchase Planning</h4>
+      <p>We help you move from dreaming about a house to actually planning for it. This includes determining a realistic budget, your ideal EMI capacity based on your income, and a strategy for accumulating the necessary down payment.</p>
+      <p class="benefit"><strong>Benefit:</strong> This structured approach prevents you from becoming "house-rich and cash-poor." It promotes a prudent decision that fits comfortably within your finances, avoiding over-leveraging and financial stress.</p>
+      
+      <h4>Travel / Lifestyle Milestones</h4>
+      <p>For large, enjoyable expenses like a family vacation or a luxury purchase, we help you prepare in advance. By creating a dedicated fund, you can plan for these events without it feeling like a sudden financial shock.</p>
+      <p class="benefit"><strong>Benefit:</strong> This allows you to enjoy the best of life, guilt-free. You can maintain your desired lifestyle and create lasting memories, knowing that these expenses have been thoughtfully planned for and will not affect your core financial goals.</p>
 
-      <h4>3. Investment Planning</h4>
-      <div class="process-diagram">
-        <div class="process-flow">
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg></div><p>Client Profiling & IPS Creation</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></div><p>Asset-Class Optimization</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V7a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg></div><p>Stress Testing</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></div><p>Implementation & Reporting</p></div>
-        </div>
-      </div>
-      <h5>Benefit for You:</h5>
-      <p class="benefit">You receive a scientifically crafted, resilient portfolio that is designed to weather market volatility. Our rigorous, research-backed approach ensures your investments are always aligned with your risk tolerance and aimed at consistent, long-term growth.</p>
+      <h3>3. Risk Management Planning</h3>
+      
+      <h4>Emergency Fund Planning</h4>
+      <p>Life is unpredictable. We help you build a liquid, easily accessible reserve fund designed to cover 6 to 12 months of essential living expenses. This is your personal financial safety net.</p>
+      <p class="benefit"><strong>Benefit:</strong> This fund acts as a powerful shield, protecting your long-term investments and financial goals from being derailed by unexpected events like a job loss, a medical emergency, or a business slowdown.</p>
+      
+      <h4>Insurance Planning (Life, Health, Critical)</h4>
+      <p>We evaluate and recommend adequate insurance coverage to protect what matters most. Our focus on pure-protection products like term insurance, family floater health plans, and critical illness policies that provide maximum coverage for the lowest cost.</p>
+      <p class="benefit"><strong>Benefit:</strong> This is the ultimate defensive strategy. It ensures that a single unforeseen event cannot lead to financial ruin for your family, providing a secure foundation upon which to build your wealth.</p>
 
-      <h4>4. Risk Management</h4>
-      <div class="process-diagram">
-        <div class="process-flow">
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><p>Risk Profiling & Needs Analysis</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><p>Risk Identification & Quantification</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" /></svg></div><p>Emergency Fund & Insurance Plan</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.085a2 2 0 00-1.736.97l-2.714 5.428a2 2 0 001.736 2.97h4.618a2 2 0 002-2z" /></svg></div><p>Implementation</p></div>
-        </div>
-      </div>
-      <h5>Benefit for You:</h5>
-      <p class="benefit">This provides a powerful safety net for your finances. By proactively addressing potential risks, we ensure that unforeseen events like a medical emergency or job loss do not derail your long-term financial goals, giving you and your family complete peace of mind.</p>
+      <h3>4. Investment Planning</h3>
+      
+      <h4>Risk-Based Asset Allocation</h4>
+      <p>We distribute your investments intelligently across different asset classes like equity, debt, gold, and real estate. This allocation isn't random; it's based on a scientific assessment of your personal risk profile and financial goals.</p>
+      <p class="benefit"><strong>Benefit:</strong> This strategy is key to consistent, long-term growth. It balances your desire for high returns with your tolerance for risk, creating a resilient portfolio that can weather market ups and downs.</p>
+      
+      <h4>Tax-Efficient Investments</h4>
+      <p>Our strategy involves carefully selecting investment instruments like ELSS, NPS, and PPF that offer the dual benefit of generating strong returns while also reducing your taxable income under various sections of the Income Tax Act.</p>
+      <p class="benefit"><strong>Benefit:</strong> This simple but powerful approach directly enhances your post-tax returns. You keep more of your hard-earned money, significantly improving the overall efficiency of your investment portfolio.</p>
 
-      <h4>5. Retirement Planning</h4>
-      <div class="process-diagram">
-        <div class="process-flow">
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" /></svg></div><p>Goal Discovery & Lifestyle Assessment</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg></div><p>Gap Analysis (Required vs. Existing)</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.933 12.8a1 1 0 000-1.6L6.6 7.2A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z" /></svg></div><p>Asset Allocation (Glide Path)</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg></div><p>Withdrawal Phase Planning</p></div>
-        </div>
-      </div>
-      <h5>Benefit for You:</h5>
-      <p class="benefit">This provides a clear, stress-free path to a comfortable and financially independent retirement. You'll have an inflation-protected income stream, giving you the freedom to live your golden years on your own terms.</p>
+      <h3>5. Retirement & Pension Planning</h3>
+      
+      <h4>Retirement Planning (Accumulation & Withdrawal)</h4>
+      <p>We work with you to envision your ideal retirement lifestyle and then calculate the exact financial corpus needed to sustain it. We then develop a disciplined monthly saving target and a safe withdrawal strategy for your post-retirement years.</p>
+      <p class="benefit"><strong>Benefit:</strong> This service provides a clear, stress-free path to a comfortable retirement. You'll have an inflation-protected income stream, giving you the freedom to live your retirement years on your own terms.</p>
+      
+      <h4>Pension Planning (NPS, EPF, Annuity)</h4>
+      <p>We strategically utilize government-backed and private pension instruments to build a reliable and consistent income floor for your retirement. This ensures your basic needs are always covered.</p>
+      <p class="benefit"><strong>Benefit:</strong> This creates a predictable, lifelong income stream and leverages the unique tax efficiencies offered by pension products, further securing your financial independence in retirement.</p>
 
-      <h4>6. Debt Management</h4>
-      <div class="process-diagram">
-        <div class="process-flow">
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg></div><p>Debt Profiling & Data Collection</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" /></svg></div><p>Analysis & Credit Score Review</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547a2 2 0 00-.547 1.806l.477 2.387a6 6 0 00.517 3.86l.158.318a6 6 0 00.517 3.86l2.387.477a2 2 0 001.806-.547a2 2 0 00.547-1.806l-.477-2.387a6 6 0 00-.517-3.86l-.158-.318a6 6 0 01-.517-3.86l-.477-2.387a2 2 0 01.547-1.806z" /></svg></div><p>Debt Restructuring Strategy</p></div>
-          <div class="process-arrow">&rarr;</div>
-          <div class="process-step"><div class="process-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div><p>Action Plan & Behavioral Coaching</p></div>
-        </div>
-      </div>
-      <h5>Benefit for You:</h5>
-      <p class="benefit">This service helps you regain control of your finances. By creating a structured plan to reduce and eliminate debt, we help you lower your interest burden, improve your credit score, and free up cash flow to be directed towards your wealth-building goals.</p>
+      <h3>6. Debt & Credit Advisory</h3>
+      
+      <h4>Review of Existing Loans & EMI Optimization</h4>
+      <p>We conduct a thorough evaluation of your existing loans, assessing interest rates, tenure, and prepayment options. We then identify strategies like balance transfers or part-payments to restructure your EMIs.</p>
+      <p class="benefit"><strong>Benefit:</strong> This can significantly reduce your total debt burden and the interest you pay over the life of the loan, saving you money and helping you become debt-free faster.</p>
+      
+      <h4>Debt Restructuring & Consolidation Planning</h4>
+      <p>If you're juggling multiple high-interest loans (like personal loans or credit cards), we create a plan to merge them into a single, more manageable loan with a lower interest rate.</p>
+      <p class="benefit"><strong>Benefit:</strong> This simplifies your monthly repayments, lowers your interest outgo, and provides a clear, structured path to clearing your debts.</p>
+      
+      <h4>Credit Score Analysis & Improvement Advice</h4>
+      <p>We review your CIBIL, Equifax, or Experian credit reports to understand your current credit health. Based on this, we provide clear, actionable steps you can take to boost your credit score over time.</p>
+      <p class="benefit"><strong>Benefit:</strong> A higher credit score is a powerful financial tool. It improves your eligibility for future loans and enables you to secure much lower interest rates, saving you thousands over the years.</p>
     `
   },
   'plan-2': {

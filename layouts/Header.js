@@ -135,6 +135,7 @@ const Header = ({ dark }) => {
                 "investor-ia",
                 "investor-ra",
                 "disclosure",
+                "certificate",
               ])}`}
             >
               <a href="#.">Regulatory</a>
@@ -147,6 +148,9 @@ const Header = ({ dark }) => {
                 </li>
                 <li>
                   <Link href="disclosure">Disclosure</Link>
+                </li>
+                <li>
+                  <Link href="certificate">Certificate</Link>
                 </li>
               </ul>
             </li>
@@ -205,6 +209,10 @@ const Header = ({ dark }) => {
           <Link href="register" className="mil-btn mil-sm">
             get started
           </Link>
+          <div className="mil-sebi-info">
+            <div className="mil-sebi-text">SEBI (IA): INA000012345</div>
+            <div className="mil-sebi-text">SEBI (RA): INH000054321</div>
+          </div>
           <div
             className={`mil-menu-btn ${toggle ? "mil-active" : ""}`}
             onClick={() => setToggle(!toggle)}

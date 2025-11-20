@@ -168,7 +168,7 @@ const SelectField = ({ label, value, onChange, name, children, info }) => (
     </div>
 );
 
-const SummaryCard = ({ title, value, icon, color, subtext }) => {
+const SummaryCard = ({ title, value, icon, color, subtext, isMobile = false }) => {
     const colorMap = {
         'bg-blue-100': '#E7F1FA',
         'bg-green-100': '#D4F4DD',
@@ -227,8 +227,8 @@ export default function RetirementCalculatorPage() {
     // Load PDF libraries on component mount
     useEffect(() => {
         const checkSize = () => {
-            setIsMobile(isMobile);
-            setIsTablet(isTablet);
+            setIsMobile(window.innerWidth < 768);
+            setIsTablet(window.innerWidth < 1024);
         };
         checkSize();
         window.addEventListener('resize', checkSize);
@@ -485,11 +485,11 @@ export default function RetirementCalculatorPage() {
                         </div>
                         
                         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
-                            <SummaryCard title="Success Probability" value={`${results ? Math.round(results.successProbability) : '...'}%`} icon={<Target style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#002C51' }}/>} color="bg-blue-100" subtext="Chance of not running out of money"/>
-                            <SummaryCard title="Median Nest Egg" value={results ? formatCurrency(results.medianNestEgg) : '...'} icon={<DollarSign style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#1F9A32' }}/>} color="bg-green-100" subtext={`At retirement (age ${inputs.retirementAge})`}/>
-                            <SummaryCard title="Median Worst Drawdown" value={results ? `${(results.medianWorstDrawdown * 100).toFixed(1)}%` : '...'} icon={<AlertTriangle style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#FF8C42' }}/>} color="bg-orange-100" subtext="Typical largest portfolio drop"/>
-                            <SummaryCard title="Total Current Savings" value={formatCurrency(totalCurrentSavings)} icon={<Briefcase style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#92ADCB' }}/>} color="bg-indigo-100" subtext="Across all accounts"/>
-                            <SummaryCard title="Retirement Years" value={`${inputs.lifeExpectancy - inputs.retirementAge} yrs`} icon={<Home style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#FFB627' }}/>} color="bg-yellow-100" subtext={`From age ${inputs.retirementAge} to ${inputs.lifeExpectancy}`}/>
+                            <SummaryCard title="Success Probability" value={`${results ? Math.round(results.successProbability) : '...'}%`} icon={<Target style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#002C51' }}/>} color="bg-blue-100" subtext="Chance of not running out of money" isMobile={isMobile}/>
+                            <SummaryCard title="Median Nest Egg" value={results ? formatCurrency(results.medianNestEgg) : '...'} icon={<DollarSign style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#1F9A32' }}/>} color="bg-green-100" subtext={`At retirement (age ${inputs.retirementAge})`} isMobile={isMobile}/>
+                            <SummaryCard title="Median Worst Drawdown" value={results ? `${(results.medianWorstDrawdown * 100).toFixed(1)}%` : '...'} icon={<AlertTriangle style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#FF8C42' }}/>} color="bg-orange-100" subtext="Typical largest portfolio drop" isMobile={isMobile}/>
+                            <SummaryCard title="Total Current Savings" value={formatCurrency(totalCurrentSavings)} icon={<Briefcase style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#92ADCB' }}/>} color="bg-indigo-100" subtext="Across all accounts" isMobile={isMobile}/>
+                            <SummaryCard title="Retirement Years" value={`${inputs.lifeExpectancy - inputs.retirementAge} yrs`} icon={<Home style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#FFB627' }}/>} color="bg-yellow-100" subtext={`From age ${inputs.retirementAge} to ${inputs.lifeExpectancy}`} isMobile={isMobile}/>
                         </div>
 
                         <div id="portfolio-chart" style={{ backgroundColor: 'white', padding: isMobile ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>

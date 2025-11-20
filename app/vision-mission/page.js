@@ -7,17 +7,22 @@ import Banner from "@/components/Banner";
 
 export default function VisionMission() {
   useEffect(() => {
-    // Simple IntersectionObserver to add a fade-in class to elements with .animated-section and .process-item
+    // IntersectionObserver to add fade-in animation to sections and process items
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("fade-in-up");
+            // For process items, add staggered animation
+            if (entry.target.classList.contains("process-item")) {
+              const index = Array.from(document.querySelectorAll(".process-item")).indexOf(entry.target);
+              entry.target.style.animationDelay = `${index * 0.15}s`;
+            }
             observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.15 }
     );
 
     document.querySelectorAll(".animated-section, .process-item").forEach((el) => {
@@ -69,7 +74,7 @@ export default function VisionMission() {
                 </div>
                 <div className="col-md-6 mil-mb-40">
                   <div className="mil-icon-box">
-                    <img src="/img/home-1/icons/5.svg" alt="Digital-First Advisory" className="mil-mb-20 mil-up" />
+                    <img src="/img/inner-pages/icons/5.svg" alt="Digital-First Advisory" className="mil-mb-20 mil-up" />
                     <h5 className="mil-mb-10 mil-up">Digital-First Advisory</h5>
                     <p className="mil-text-s mil-soft mil-up">
                       Leveraging technology and data to deliver advice at scale without compromising personalization.
@@ -90,7 +95,7 @@ export default function VisionMission() {
 
             <div className="col-xl-5 mil-mb-60 animated-section">
               <div className="mil-image-frame mil-visible-overflow">
-                <img src="/img/illustrations/vision.png" alt="Our Vision" className="mil-up" />
+                <img src="/img/home-1/2.png" alt="Our Vision" className="mil-up" />
                 <div className="mil-img-box mil-right-max mil-soft-box mil-up">
                   <img src="/img/home-1/icons/2.svg" alt="icon" />
                 </div>
@@ -117,7 +122,7 @@ export default function VisionMission() {
                 </div>
                 <div className="col-md-6 mil-mb-30">
                   <div className="mil-mini-icon-box">
-                    <img src="/img/home-1/icons/6.svg" alt="Unbiased Advice, Always" className="mil-mb-15 mil-up" />
+                    <img src="/img/inner-pages/icons/6.svg" alt="Unbiased Advice, Always" className="mil-mb-15 mil-up" />
                     <h6 className="mil-up">Unbiased Advice, Always</h6>
                     <p className="mil-text-s mil-soft mil-up">Operate on a 100% fee-only, non-commissioned model as per SEBI IA Regulations.</p>
                   </div>
@@ -138,7 +143,7 @@ export default function VisionMission() {
                 </div>
                 <div className="col-md-6 mil-mb-30">
                   <div className="mil-mini-icon-box">
-                    <img src="/img/home-1/icons/5.svg" alt="Client-Centric Technology" className="mil-mb-15 mil-up" />
+                    <img src="/img/inner-pages/icons/5.svg" alt="Client-Centric Technology" className="mil-mb-15 mil-up" />
                     <h6 className="mil-up">Client-Centric Technology</h6>
                     <p className="mil-text-s mil-soft mil-up">Provide dashboards, trackers, and robo-advisory tools backed by AI/ML insights.</p>
                   </div>
@@ -155,7 +160,7 @@ export default function VisionMission() {
 
             <div className="col-xl-5 mil-mb-60 animated-section">
               <div className="mil-image-frame mil-visible-overflow">
-                <img src="/img/illustrations/mission.png" alt="Our Mission" className="mil-up" />
+                <img src="/img/home-1/3.png" alt="Our Mission" className="mil-up" />
                 <div className="mil-img-box mil-accent-box mil-up">
                   <div>
                     <h4 className="mil-light mil-mb-10">Discipline</h4>
@@ -226,7 +231,7 @@ export default function VisionMission() {
 
             <div className="col-md-6 col-xl-3 mil-mb-40">
               <div className="mil-icon-box">
-                <img src="/img/home-1/icons/6.svg" alt="Corporate Executives" className="mil-mb-20 mil-up" />
+                <img src="/img/inner-pages/icons/6.svg" alt="Corporate Executives" className="mil-mb-20 mil-up" />
                 <h5 className="mil-mb-10 mil-up">Corporate Executives</h5>
                 <p className="mil-text-s mil-soft mil-up">
                   Strategic advice on managing concentrated stock positions, ESOPs, and deferred compensation.
@@ -424,33 +429,88 @@ export default function VisionMission() {
           border: 4px solid rgba(0,0,0,0.06);
           border-radius: 50%;
           box-shadow: 0 6px 18px rgba(0,0,0,0.04);
-          transition: all .25s ease;
+          transition: all .4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
-        .process-dot svg { width: 22px; height: 22px; color: rgba(0,0,0,0.45); }
+        .process-dot svg { 
+          width: 22px; 
+          height: 22px; 
+          color: rgba(0,0,0,0.45);
+          transition: all .3s ease;
+        }
         .process-card {
           background: linear-gradient(145deg, #fff, #fbfdff);
           border-radius: 12px;
           padding: 1.4rem;
           border: 1px solid rgba(0,0,0,0.04);
           box-shadow: 0 6px 18px rgba(10,20,40,0.02);
-          transition: transform .25s ease, box-shadow .25s ease;
+          transition: all .4s cubic-bezier(0.34, 1.56, 0.64, 1);
           width: 100%;
         }
+        
+        /* Scroll-triggered animations */
+        .process-item.fade-in-up .process-dot {
+          border-color: #1F9A32;
+          transform: scale(1.1) rotate(360deg);
+          box-shadow: 0 8px 24px rgba(31, 154, 50, 0.2);
+        }
+        .process-item.fade-in-up .process-dot svg {
+          color: #1F9A32;
+          transform: scale(1.15);
+        }
+        .process-item.fade-in-up .process-card {
+          transform: translateX(12px);
+          box-shadow: 0 12px 32px rgba(10,20,40,0.08);
+          border-color: rgba(31, 154, 50, 0.1);
+        }
+        
+        /* Hover effects */
         .process-item:hover .process-dot {
-          border-color: #0d9488;
-          transform: scale(1.06);
+          transform: scale(1.15) rotate(360deg);
+          box-shadow: 0 10px 28px rgba(31, 154, 50, 0.25);
         }
         .process-item:hover .process-card {
-          transform: translateY(-6px);
-          box-shadow: 0 18px 40px rgba(10,20,40,0.06);
+          transform: translateX(16px) translateY(-4px);
+          box-shadow: 0 18px 40px rgba(10,20,40,0.1);
         }
         .process-number { font-size: .85rem; font-weight: 700; color: rgba(0,0,0,0.45); margin-bottom: 6px; }
         .process-title { font-size: 1.125rem; font-weight: 700; color: #0b1220; margin-bottom: 8px; }
         .process-description { color: rgba(0,0,0,0.6); line-height: 1.45; }
 
         /* fade-in-up animation class used by observer */
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in-up { animation: fadeInUp 0.7s ease forwards; opacity: 0; }
+        @keyframes fadeInUp { 
+          from { 
+            opacity: 0; 
+            transform: translateY(30px); 
+          } 
+          to { 
+            opacity: 1; 
+            transform: translateY(0); 
+          } 
+        }
+        .fade-in-up { 
+          animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; 
+          opacity: 0; 
+        }
+        
+        /* Process item specific animations */
+        .process-item { 
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        .process-item.fade-in-up { 
+          opacity: 1;
+          transform: translateY(0);
+        }
+        
+        /* Ensure timeline appears progressively */
+        .process-timeline::before {
+          animation: lineGrow 1.5s ease-out forwards;
+          transform-origin: top;
+        }
+        @keyframes lineGrow {
+          from { transform: scaleY(0); }
+          to { transform: scaleY(1); }
+        }
 
         /* Small responsive adjustments */
         @media (max-width: 991.98px) {

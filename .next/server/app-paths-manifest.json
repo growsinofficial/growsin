@@ -1,4 +1,8 @@
 {
+  "/investment-advisory/page": "app/investment-advisory/page.js",
+  "/founder/page": "app/founder/page.js",
   "/page": "app/page.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js"
+  "/research-analysis/page": "app/research-analysis/page.js",
+  "/sip-calculator/page": "app/sip-calculator/page.js",
+  "/investor-ia/page": "app/investor-ia/page.js"
 }

@@ -11,15 +11,13 @@ const Header = ({ dark }) => {
 
   return (
     <div className={`mil-top-panel ${dark ? "mil-dark-2" : ""}`}>
-      <div className="container">
-        <Link href="/" className="mil-logo">
-          <img
-            src={dark ? "img/logo-light.png" : "img/logo.png"}
-            alt="Growsin"
-            width={223}
-            height={222}
-          />
-        </Link>
+        <div className="container">
+          <Link href="/" className="mil-logo">
+            <img
+              src={dark ? "img/logo-light.png" : "img/logo.png"}
+              alt="Growsin"
+            />
+          </Link>
 
         <nav className={`mil-top-menu ${toggle ? "mil-active" : ""}`}>
           <ul>

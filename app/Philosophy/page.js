@@ -216,6 +216,27 @@ export default function Philosophy() {
           line-height: 1.6;
         }
 
+        /* Override theme styles for mobile */
+        @media screen and (max-width: 992px) {
+          /* Banner title - the "Our Philosophy" heading */
+          h1.mil-display,
+          .h1.mil-display,
+          h1.mil-text-gradient-3 {
+            font-size: 2rem !important;
+          }
+          
+          /* Intro section */
+          .intro-center h2,
+          .intro-center h2.mil-mb-20,
+          .intro-center h2.mil-up {
+            font-size: 1.5rem !important;
+          }
+          .intro-lead,
+          p.mil-text-m.intro-lead {
+            font-size: 0.9rem !important;
+          }
+        }
+
         /* Principles grid */
         .principles-grid {
           display: grid;
@@ -297,9 +318,23 @@ export default function Philosophy() {
 
         /* small responsive tweaks */
         @media (max-width: 767px) {
-          .pc-title { font-size: 1rem; }
-          .pc-dot { width:32px; height:32px; }
-          .principle-card { padding:16px; }
+          /* Banner title - smaller on mobile */
+          h1.mil-display,
+          .h1.mil-display,
+          h1.mil-text-gradient-3 {
+            font-size: 1.75rem !important;
+          }
+          
+          .intro-center h2,
+          .intro-center h2.mil-mb-20,
+          .intro-center h2.mil-up { font-size: 1.25rem !important; }
+          .intro-lead,
+          p.mil-text-m.intro-lead { font-size: 0.85rem !important; }
+          .pc-title { font-size: 0.9rem !important; }
+          .pc-lead { font-size: 0.8rem !important; }
+          .pc-what { font-size: 0.8rem !important; }
+          .pc-dot { width:28px; height:28px; }
+          .principle-card { padding:14px; }
         }
       `}</style>
     </PlaxLayout>

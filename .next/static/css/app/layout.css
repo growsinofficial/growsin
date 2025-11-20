@@ -11773,7 +11773,21 @@ h1.mil-display,
   }
   h1.mil-display,
   .h1.mil-display {
-    font-size: 56px;
+    font-size: 40px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  h1.mil-display,
+  .h1.mil-display {
+    font-size: 32px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  h1.mil-display,
+  .h1.mil-display {
+    font-size: 28px;
   }
 }
 
@@ -11831,6 +11845,32 @@ h6,
 @media screen and (max-width: 992px) {
   .mil-text-m {
     font-size: 16px;
+  }
+}
+
+/* Founder page text - make it larger like 'L' size */
+.mil-team-card .mil-text-m {
+  font-size: 20px;
+  line-height: 1.7;
+}
+@media screen and (max-width: 992px) {
+  .mil-team-card .mil-text-m {
+    font-size: 18px;
+  }
+}
+@media screen and (max-width: 768px) {
+  .mil-team-card .mil-text-m {
+    font-size: 17px;
+  }
+}
+
+/* Founder page taglines - smaller on mobile */
+.mil-team-card .mil-text-xs {
+  font-size: 14px;
+}
+@media screen and (max-width: 768px) {
+  .mil-team-card .mil-text-xs {
+    font-size: 12px;
   }
 }
 
@@ -12014,6 +12054,35 @@ embed,
 object {
   display: block;
   max-width: 100%;
+}
+
+/* Logo sizing */
+.mil-top-panel .mil-logo img {
+  width: 180px;
+  height: auto;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+@media (max-width: 1200px) {
+  .mil-top-panel .mil-logo img {
+    width: 140px;
+    max-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mil-top-panel .mil-logo img {
+    width: 120px;
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mil-top-panel .mil-logo img {
+    width: 120px;
+    max-width: 120px;
+  }
 }
 
 /* -------------------------------------------

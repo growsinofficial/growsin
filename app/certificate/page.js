@@ -1,10 +1,18 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PlaxLayout from "@/layouts/PlaxLayout";
 import { X, FileText, Award, Shield } from "lucide-react";
 
 export default function CertificatePage() {
   const [showCertificate, setShowCertificate] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <PlaxLayout>
@@ -15,10 +23,10 @@ export default function CertificatePage() {
             <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#E7F1FA', marginBottom: '24px' }}>
               <Award size={40} style={{ color: '#002C51' }} />
             </div>
-            <h1 style={{ fontSize: window.innerWidth < 768 ? '32px' : '48px', fontWeight: '700', color: '#002C51', marginBottom: '16px' }}>
+            <h1 style={{ fontSize: isMobile ? '32px' : '48px', fontWeight: '700', color: '#002C51', marginBottom: '16px' }}>
               Our Certifications
             </h1>
-            <p style={{ fontSize: window.innerWidth < 768 ? '16px' : '18px', color: '#6b7280', maxWidth: '700px', margin: '0 auto 32px', lineHeight: '1.6' }}>
+            <p style={{ fontSize: isMobile ? '16px' : '18px', color: '#6b7280', maxWidth: '700px', margin: '0 auto 32px', lineHeight: '1.6' }}>
               We are proud to hold professional certifications that demonstrate our commitment to excellence and regulatory compliance in the financial advisory industry.
             </p>
           </div>
@@ -27,7 +35,7 @@ export default function CertificatePage() {
         {/* Certificate Info Section */}
         <section style={{ padding: '60px 20px' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(3, 1fr)', gap: '24px', marginBottom: '48px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '24px', marginBottom: '48px' }}>
               {/* Info Card 1 */}
               <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '56px', height: '56px', borderRadius: '50%', backgroundColor: '#E7F1FA', marginBottom: '20px' }}>
@@ -70,7 +78,7 @@ export default function CertificatePage() {
 
             {/* View Certificate Button */}
             <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '48px 32px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)' }}>
-              <h2 style={{ fontSize: window.innerWidth < 768 ? '24px' : '32px', fontWeight: '700', color: '#002C51', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: isMobile ? '24px' : '32px', fontWeight: '700', color: '#002C51', marginBottom: '16px' }}>
                 View Our Official Certificate
               </h2>
               <p style={{ fontSize: '16px', color: '#6b7280', marginBottom: '32px', maxWidth: '600px', margin: '0 auto 32px' }}>

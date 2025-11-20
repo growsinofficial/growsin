@@ -177,11 +177,11 @@ const SummaryCard = ({ title, value, icon, color, subtext }) => {
         'bg-yellow-100': '#FFF4CC'
     };
     return (
-        <div style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'flex-start', gap: '12px', border: '1px solid #E7F1FA' }}>
-            <div style={{ padding: window.innerWidth < 768 ? '8px' : '10px', borderRadius: '10px', backgroundColor: colorMap[color] || '#E7F1FA' }}>{icon}</div>
+        <div style={{ backgroundColor: 'white', padding: isMobile ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', display: 'flex', alignItems: 'flex-start', gap: '12px', border: '1px solid #E7F1FA' }}>
+            <div style={{ padding: isMobile ? '8px' : '10px', borderRadius: '10px', backgroundColor: colorMap[color] || '#E7F1FA' }}>{icon}</div>
             <div>
                 <p style={{ fontSize: '0.75rem', color: 'rgb(146 173 203)', fontWeight: '500' }}>{title}</p>
-                <p style={{ fontSize: window.innerWidth < 768 ? '1.125rem' : '1.25rem', fontWeight: 'bold', color: 'rgb(0 44 81)', marginTop: '3px' }}>{value}</p>
+                <p style={{ fontSize: isMobile ? '1.125rem' : '1.25rem', fontWeight: 'bold', color: 'rgb(0 44 81)', marginTop: '3px' }}>{value}</p>
                 {subtext && <p style={{ fontSize: '0.6875rem', color: 'rgb(137, 141, 150)', marginTop: '3px' }}>{subtext}</p>}
             </div>
         </div>
@@ -221,14 +221,25 @@ export default function RetirementCalculatorPage() {
     const [results, setResults] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isDownloading, setIsDownloading] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
 
     // Load PDF libraries on component mount
     useEffect(() => {
+        const checkSize = () => {
+            setIsMobile(isMobile);
+            setIsTablet(isTablet);
+        };
+        checkSize();
+        window.addEventListener('resize', checkSize);
+
         Promise.all([
             loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
             loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
         ]).catch(err => console.error("Failed to load PDF libraries", err));
         calculate();
+
+        return () => window.removeEventListener('resize', checkSize);
     }, []);
 
     const handleInputChange = (e) => {
@@ -386,8 +397,8 @@ export default function RetirementCalculatorPage() {
     }, [results]);
 
     const calculatorContent = (
-        <div style={{ backgroundColor: '#F3F7FD', color: 'rgb(0 44 81)', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', paddingTop: '120px' }}>
-            <aside style={{ width: window.innerWidth < 768 ? '100%' : '420px', backgroundColor: 'white', padding: window.innerWidth < 768 ? '16px' : '20px', display: 'flex', flexDirection: 'column', gap: '16px', borderRight: window.innerWidth < 768 ? 'none' : '1px solid #E7F1FA', borderBottom: window.innerWidth < 768 ? '1px solid #E7F1FA' : 'none', height: window.innerWidth < 768 ? 'auto' : 'calc(100vh - 120px)', position: window.innerWidth < 768 ? 'relative' : 'sticky', top: window.innerWidth < 768 ? '0' : '120px', overflowY: 'auto', overflowX: 'hidden' }}>
+        <div style={{ backgroundColor: '#F3F7FD', color: 'rgb(0 44 81)', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex', flexDirection: isMobile ? 'column' : 'row', paddingTop: '120px' }}>
+            <aside style={{ width: isMobile ? '100%' : '420px', backgroundColor: 'white', padding: isMobile ? '16px' : '20px', display: 'flex', flexDirection: 'column', gap: '16px', borderRight: isMobile ? 'none' : '1px solid #E7F1FA', borderBottom: isMobile ? '1px solid #E7F1FA' : 'none', height: isMobile ? 'auto' : 'calc(100vh - 120px)', position: isMobile ? 'relative' : 'sticky', top: isMobile ? '0' : '120px', overflowY: 'auto', overflowX: 'hidden' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                      <div style={{ padding: '6px', backgroundColor: '#E7F1FA', borderRadius: '6px' }}><BarChart2 style={{ height: '22px', width: '22px', color: '#002C51' }}/></div>
                      <h1 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: 'rgb(0 44 81)' }}>Retirement Calculator</h1>
@@ -463,27 +474,27 @@ export default function RetirementCalculatorPage() {
                 </button>
             </aside>
 
-            <main style={{ flex: 1, padding: window.innerWidth < 768 ? '16px' : '24px', overflowY: 'auto', backgroundColor: '#F3F7FD' }}>
-                {isLoading && !results ? (<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><p style={{ fontSize: window.innerWidth < 768 ? '1rem' : '1.25rem', color: 'rgb(137, 141, 150)' }}>Loading Initial Simulation...</p></div>) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: window.innerWidth < 768 ? '20px' : '28px', maxWidth: '1280px', margin: '0 auto' }}>
-                        <div style={{ display: 'flex', flexDirection: window.innerWidth < 768 ? 'column' : 'row', justifyContent: 'space-between', alignItems: window.innerWidth < 768 ? 'flex-start' : 'center', gap: window.innerWidth < 768 ? '12px' : '0' }}>
-                            <h1 style={{ fontSize: window.innerWidth < 768 ? '1.375rem' : '1.75rem', fontWeight: 'bold', color: 'rgb(0 44 81)' }}>Your Retirement Calculator</h1>
-                             <button onClick={handleDownloadPDF} disabled={isDownloading || !results} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: window.innerWidth < 768 ? '6px 12px' : '7px 14px', fontSize: window.innerWidth < 768 ? '0.8125rem' : '0.875rem', backgroundColor: isDownloading || !results ? 'rgb(137, 141, 150)' : '#1F9A32', color: 'white', fontWeight: '600', borderRadius: '6px', border: 'none', cursor: isDownloading || !results ? 'not-allowed' : 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', transition: 'all 0.3s ease', fontFamily: 'inherit' }} onMouseEnter={(e) => !isDownloading && !(!results) && (e.target.style.backgroundColor = '#178A2C')} onMouseLeave={(e) => !isDownloading && !(!results) && (e.target.style.backgroundColor = '#1F9A32')}>
+            <main style={{ flex: 1, padding: isMobile ? '16px' : '24px', overflowY: 'auto', backgroundColor: '#F3F7FD' }}>
+                {isLoading && !results ? (<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><p style={{ fontSize: isMobile ? '1rem' : '1.25rem', color: 'rgb(137, 141, 150)' }}>Loading Initial Simulation...</p></div>) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '20px' : '28px', maxWidth: '1280px', margin: '0 auto' }}>
+                        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '12px' : '0' }}>
+                            <h1 style={{ fontSize: isMobile ? '1.375rem' : '1.75rem', fontWeight: 'bold', color: 'rgb(0 44 81)' }}>Your Retirement Calculator</h1>
+                             <button onClick={handleDownloadPDF} disabled={isDownloading || !results} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '6px 12px' : '7px 14px', fontSize: isMobile ? '0.8125rem' : '0.875rem', backgroundColor: isDownloading || !results ? 'rgb(137, 141, 150)' : '#1F9A32', color: 'white', fontWeight: '600', borderRadius: '6px', border: 'none', cursor: isDownloading || !results ? 'not-allowed' : 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', transition: 'all 0.3s ease', fontFamily: 'inherit' }} onMouseEnter={(e) => !isDownloading && !(!results) && (e.target.style.backgroundColor = '#178A2C')} onMouseLeave={(e) => !isDownloading && !(!results) && (e.target.style.backgroundColor = '#1F9A32')}>
                                 {isDownloading ? (<> <svg style={{ animation: 'spin 1s linear infinite', marginLeft: '-4px', marginRight: '8px', height: '16px', width: '16px' }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" style={{ opacity: 0.25 }}></circle> <path d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style={{ opacity: 0.75 }} fill="currentColor"></path> </svg> Creating... </>) : (<> <Download style={{ marginRight: '6px', height: '16px', width: '16px' }}/> Download Report (PDF) </>)}
                             </button>
                         </div>
                         
-                        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : window.innerWidth < 1024 ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: window.innerWidth < 768 ? '12px' : '16px' }}>
-                            <SummaryCard title="Success Probability" value={`${results ? Math.round(results.successProbability) : '...'}%`} icon={<Target style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#002C51' }}/>} color="bg-blue-100" subtext="Chance of not running out of money"/>
-                            <SummaryCard title="Median Nest Egg" value={results ? formatCurrency(results.medianNestEgg) : '...'} icon={<DollarSign style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#1F9A32' }}/>} color="bg-green-100" subtext={`At retirement (age ${inputs.retirementAge})`}/>
-                            <SummaryCard title="Median Worst Drawdown" value={results ? `${(results.medianWorstDrawdown * 100).toFixed(1)}%` : '...'} icon={<AlertTriangle style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#FF8C42' }}/>} color="bg-orange-100" subtext="Typical largest portfolio drop"/>
-                            <SummaryCard title="Total Current Savings" value={formatCurrency(totalCurrentSavings)} icon={<Briefcase style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#92ADCB' }}/>} color="bg-indigo-100" subtext="Across all accounts"/>
-                            <SummaryCard title="Retirement Years" value={`${inputs.lifeExpectancy - inputs.retirementAge} yrs`} icon={<Home style={{ height: window.innerWidth < 768 ? '18px' : '20px', width: window.innerWidth < 768 ? '18px' : '20px', color: '#FFB627' }}/>} color="bg-yellow-100" subtext={`From age ${inputs.retirementAge} to ${inputs.lifeExpectancy}`}/>
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(180px, 1fr))', gap: isMobile ? '12px' : '16px' }}>
+                            <SummaryCard title="Success Probability" value={`${results ? Math.round(results.successProbability) : '...'}%`} icon={<Target style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#002C51' }}/>} color="bg-blue-100" subtext="Chance of not running out of money"/>
+                            <SummaryCard title="Median Nest Egg" value={results ? formatCurrency(results.medianNestEgg) : '...'} icon={<DollarSign style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#1F9A32' }}/>} color="bg-green-100" subtext={`At retirement (age ${inputs.retirementAge})`}/>
+                            <SummaryCard title="Median Worst Drawdown" value={results ? `${(results.medianWorstDrawdown * 100).toFixed(1)}%` : '...'} icon={<AlertTriangle style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#FF8C42' }}/>} color="bg-orange-100" subtext="Typical largest portfolio drop"/>
+                            <SummaryCard title="Total Current Savings" value={formatCurrency(totalCurrentSavings)} icon={<Briefcase style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#92ADCB' }}/>} color="bg-indigo-100" subtext="Across all accounts"/>
+                            <SummaryCard title="Retirement Years" value={`${inputs.lifeExpectancy - inputs.retirementAge} yrs`} icon={<Home style={{ height: isMobile ? '18px' : '20px', width: isMobile ? '18px' : '20px', color: '#FFB627' }}/>} color="bg-yellow-100" subtext={`From age ${inputs.retirementAge} to ${inputs.lifeExpectancy}`}/>
                         </div>
 
-                        <div id="portfolio-chart" style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>
-                             <h2 style={{ fontSize: window.innerWidth < 768 ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: window.innerWidth < 768 ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Portfolio Value Over Time (Monte Carlo Simulation)</h2>
-                             <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 280 : 360}>
+                        <div id="portfolio-chart" style={{ backgroundColor: 'white', padding: isMobile ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>
+                             <h2 style={{ fontSize: isMobile ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: isMobile ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Portfolio Value Over Time (Monte Carlo Simulation)</h2>
+                             <ResponsiveContainer width="100%" height={isMobile ? 280 : 360}>
                                 <AreaChart data={results?.chartData} margin={{ top: 5, right: 20, left: 30, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" stroke="#E7F1FA" />
                                     <XAxis dataKey="age" stroke="#92ADCB" tick={{fill: 'rgb(146 173 203)'}} name="Age"/>
@@ -507,19 +518,19 @@ export default function RetirementCalculatorPage() {
                              </ResponsiveContainer>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : '1fr 1fr', gap: window.innerWidth < 768 ? '12px' : '16px' }}>
-                            <div style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                                <h2 style={{ fontSize: window.innerWidth < 768 ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: window.innerWidth < 768 ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Plan Analysis</h2>
-                                <div style={{ height: window.innerWidth < 768 ? '72px' : '80px', width: window.innerWidth < 768 ? '72px' : '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: analysis.color === 'text-green-500' ? '#D4F4DD' : analysis.color === 'text-amber-500' ? '#FFF4CC' : analysis.color === 'text-red-500' ? '#FFE5E5' : '#E7F1FA', marginBottom: window.innerWidth < 768 ? '10px' : '12px' }}>
-                                   {React.cloneElement(analysis.icon, {style: { height: window.innerWidth < 768 ? '36px' : '40px', width: window.innerWidth < 768 ? '36px' : '40px', color: analysis.color === 'text-green-500' ? '#1F9A32' : analysis.color === 'text-amber-500' ? '#FFB627' : analysis.color === 'text-red-500' ? '#dc2626' : 'rgb(137, 141, 150)' }})}
+                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '12px' : '16px' }}>
+                            <div style={{ backgroundColor: 'white', padding: isMobile ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                                <h2 style={{ fontSize: isMobile ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: isMobile ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Plan Analysis</h2>
+                                <div style={{ height: isMobile ? '72px' : '80px', width: isMobile ? '72px' : '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: analysis.color === 'text-green-500' ? '#D4F4DD' : analysis.color === 'text-amber-500' ? '#FFF4CC' : analysis.color === 'text-red-500' ? '#FFE5E5' : '#E7F1FA', marginBottom: isMobile ? '10px' : '12px' }}>
+                                   {React.cloneElement(analysis.icon, {style: { height: isMobile ? '36px' : '40px', width: isMobile ? '36px' : '40px', color: analysis.color === 'text-green-500' ? '#1F9A32' : analysis.color === 'text-amber-500' ? '#FFB627' : analysis.color === 'text-red-500' ? '#dc2626' : 'rgb(137, 141, 150)' }})}
                                 </div>
-                                <p style={{ fontSize: window.innerWidth < 768 ? '0.875rem' : '0.9375rem', fontWeight: '500', color: analysis.color === 'text-green-500' ? '#1F9A32' : analysis.color === 'text-amber-500' ? '#FFB627' : analysis.color === 'text-red-500' ? '#dc2626' : 'rgb(137, 141, 150)' }}>{analysis.message}</p>
+                                <p style={{ fontSize: isMobile ? '0.875rem' : '0.9375rem', fontWeight: '500', color: analysis.color === 'text-green-500' ? '#1F9A32' : analysis.color === 'text-amber-500' ? '#FFB627' : analysis.color === 'text-red-500' ? '#dc2626' : 'rgb(137, 141, 150)' }}>{analysis.message}</p>
                                 <p style={{ fontSize: '0.75rem', color: 'rgb(146 173 203)', marginTop: '6px' }}>Based on 1,000 simulations of market conditions.</p>
                             </div>
 
-                             <div id="savings-composition-chart" style={{ backgroundColor: 'white', padding: window.innerWidth < 768 ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>
-                                 <h2 style={{ fontSize: window.innerWidth < 768 ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: window.innerWidth < 768 ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Current Savings Composition</h2>
-                                 <ResponsiveContainer width="100%" height={window.innerWidth < 768 ? 260 : 280}>
+                             <div id="savings-composition-chart" style={{ backgroundColor: 'white', padding: isMobile ? '14px' : '18px', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', border: '1px solid #E7F1FA' }}>
+                                 <h2 style={{ fontSize: isMobile ? '0.9375rem' : '1rem', fontWeight: '600', marginBottom: isMobile ? '10px' : '12px', color: 'rgb(0 44 81)' }}>Current Savings Composition</h2>
+                                 <ResponsiveContainer width="100%" height={isMobile ? 260 : 280}>
                                     <PieChart>
                                         <Pie data={savingsCompositionData} cx="50%" cy="45%" labelLine={false}
                                              label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
@@ -529,7 +540,7 @@ export default function RetirementCalculatorPage() {
                                                 const y = cy + radius * Math.sin(-midAngle * RADIAN);
                                                 return (<text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" style={{ fontSize: '0.75rem', fontWeight: '600' }}>{`${(percent * 100).toFixed(0)}%`}</text>);
                                               }}
-                                             outerRadius={window.innerWidth < 768 ? 75 : 90} innerRadius={window.innerWidth < 768 ? 35 : 45} fill="#8884d8" dataKey="value" paddingAngle={5}>
+                                             outerRadius={isMobile ? 75 : 90} innerRadius={isMobile ? 35 : 45} fill="#8884d8" dataKey="value" paddingAngle={5}>
                                             {savingsCompositionData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                                         </Pie>
                                         <Tooltip formatter={(value) => formatCurrency(value)}/>
@@ -539,7 +550,7 @@ export default function RetirementCalculatorPage() {
                             </div>
                         </div>
                         
-                        <p style={{ fontSize: '0.6875rem', color: 'rgb(137, 141, 150)', marginTop: window.innerWidth < 768 ? '16px' : '20px', textAlign: 'center', maxWidth: '896px', marginLeft: 'auto', marginRight: 'auto', lineHeight: '1.5' }}>
+                        <p style={{ fontSize: '0.6875rem', color: 'rgb(137, 141, 150)', marginTop: isMobile ? '16px' : '20px', textAlign: 'center', maxWidth: '896px', marginLeft: 'auto', marginRight: 'auto', lineHeight: '1.5' }}>
                             This calculator is intended for educational purposes only and does not constitute financial advice. The projections are based on the assumptions you provide and a Monte Carlo simulation of potential market outcomes. These results are hypothetical and may not reflect your actual retirement outcome. Please consult with a qualified financial advisor for personalized advice tailored to your specific situation.
                         </p>
                     </div>

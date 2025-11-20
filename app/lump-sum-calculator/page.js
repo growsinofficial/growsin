@@ -18,7 +18,7 @@ const CardHeader = ({ children, className = '' }) => (
 );
 
 const CardContent = ({ children, className = '', style = {} }) => (
-  <div style={{ padding: window.innerWidth < 768 ? '16px' : '20px', flexGrow: 1, ...style }} className={className}>{children}</div>
+  <div style={{ padding: '20px', flexGrow: 1, ...style }} className={className}>{children}</div>
 );
 
 const CardTitle = ({ children, icon, className = '' }) => (
@@ -86,10 +86,10 @@ const SliderGroup = ({ icon, label, id, value, onChange, min, max, step, unit })
     </div>
 );
 
-const RadioGroup = ({ value, onChange, options, disabledOptions = [] }) => (
+const RadioGroup = ({ value, onChange, options, disabledOptions = [], isMobile = false }) => (
     <div>
         <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#4b5563', marginBottom: '8px' }}>Calculate For:</label>
-        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '10px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)', gap: '10px' }}>
             {options.map(option => (
                 <button 
                     key={option.value} 
@@ -208,6 +208,8 @@ export default function LumpSumCalculator() {
     const [activeTab, setActiveTab] = useState('chart');
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
     
     // --- Refs for PDF Generation ---
     const summaryRef = useRef();
@@ -221,6 +223,13 @@ export default function LumpSumCalculator() {
 
     // --- Load PDF Libraries ---
     useEffect(() => {
+        const checkSize = () => {
+            setIsMobile(window.innerWidth < 768);
+            setIsTablet(window.innerWidth < 1024);
+        };
+        checkSize();
+        window.addEventListener('resize', checkSize);
+
         const jspdfScript = document.createElement("script");
         jspdfScript.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
         jspdfScript.async = true;
@@ -257,6 +266,10 @@ export default function LumpSumCalculator() {
           }
         `;
         document.head.appendChild(style);
+
+        return () => {
+            window.removeEventListener('resize', checkSize);
+        };
     }, []);
 
     const { result, growthData, scenarios, summary, breakdownData, error, disabledCalcs } = useMemo(() => {
@@ -367,7 +380,7 @@ export default function LumpSumCalculator() {
         }
     }, [presentValue, monthlyContribution, futureValue, rate, term, inflationRate, taxRate, calculationTarget]);
 
-    const tabs = [{ id: 'chart', name: 'Projection', icon: <BarChart3 size={16}/>, content: <InvestmentChart data={growthData} formatCurrency={formatCurrency} /> }, { id: 'breakdown', name: 'Breakdown', icon: <FilePieChart size={16}/>, content: <BreakdownCardContent data={breakdownData} summary={summary} formatCurrency={formatCurrency} formatPercent={formatPercent}/> }, { id: 'scenarios', name: 'Scenarios', icon: <SlidersHorizontal size={16}/>, content: <ScenarioCardContent scenarios={scenarios} formatCurrency={formatCurrency} /> }, { id: 'table', name: 'Data Table', icon: <ChevronsDown size={16}/>, content: <YearlyTable data={growthData} formatCurrency={formatCurrency} /> }];
+    const tabs = [{ id: 'chart', name: 'Projection', icon: <BarChart3 size={16}/>, content: <InvestmentChart data={growthData} formatCurrency={formatCurrency} isMobile={isMobile} /> }, { id: 'breakdown', name: 'Breakdown', icon: <FilePieChart size={16}/>, content: <BreakdownCardContent data={breakdownData} summary={summary} formatCurrency={formatCurrency} formatPercent={formatPercent} isMobile={isMobile} isTablet={isTablet}/> }, { id: 'scenarios', name: 'Scenarios', icon: <SlidersHorizontal size={16}/>, content: <ScenarioCardContent scenarios={scenarios} formatCurrency={formatCurrency} isMobile={isMobile} isTablet={isTablet} /> }, { id: 'table', name: 'Data Table', icon: <ChevronsDown size={16}/>, content: <YearlyTable data={growthData} formatCurrency={formatCurrency} isMobile={isMobile} /> }];
 
     const handleDownloadPDF = async (userDetails) => {
         if (!window.jspdf || !window.html2canvas) { alert("PDF libraries are still loading..."); return; }
@@ -432,7 +445,7 @@ export default function LumpSumCalculator() {
                 <PdfGeneratingOverlay isGenerating={isGeneratingPDF} />
                 <header style={{ padding: '16px 24px', borderBottom: '1px solid #E7F1FA', backgroundColor: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(12px)', position: 'sticky', top: '120px', zIndex: 10 }}>
                     <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                        <h1 style={{ fontSize: window.innerWidth < 768 ? '16px' : '18px', fontWeight: '700', letterSpacing: '-0.025em', color: '#002C51', margin: 0 }}>Professional Investment Dashboard</h1>
+                        <h1 style={{ fontSize: isMobile ? '16px' : '18px', fontWeight: '700', letterSpacing: '-0.025em', color: '#002C51', margin: 0 }}>Professional Investment Dashboard</h1>
                         <button 
                             onClick={() => setIsModalOpen(true)} 
                             disabled={isGeneratingPDF || !!error}
@@ -462,13 +475,13 @@ export default function LumpSumCalculator() {
                 
                 <DownloadModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onDownload={handleDownloadPDF} />
 
-                <main style={{ width: '100%', padding: window.innerWidth < 768 ? '12px' : (window.innerWidth < 1024 ? '16px' : '24px'), maxWidth: '1400px', margin: '0 auto', overflowX: 'hidden' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 1024 ? '1fr' : '1fr 2fr', gap: window.innerWidth < 768 ? '16px' : '24px', alignItems: 'start' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: window.innerWidth < 768 ? '16px' : '24px', minWidth: 0 }}>
+                <main style={{ width: '100%', padding: isMobile ? '12px' : (isTablet ? '16px' : '24px'), maxWidth: '1400px', margin: '0 auto', overflowX: 'hidden' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1fr 2fr', gap: isMobile ? '16px' : '24px', alignItems: 'start' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px', minWidth: 0 }}>
                             <Card>
                                 <CardHeader><CardTitle icon={<PiggyBank size={20} />} >Investment Variables</CardTitle></CardHeader>
                                 <CardContent style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <RadioGroup value={calculationTarget} onChange={setCalculationTarget} options={radioOptions} disabledOptions={disabledCalcs} />
+                                    <RadioGroup value={calculationTarget} onChange={setCalculationTarget} options={radioOptions} disabledOptions={disabledCalcs} isMobile={isMobile} />
                                     {disabledCalcs.length > 0 && <p style={{ fontSize: '11px', textAlign: 'center', color: '#6b7280' }}>Rate & Term calculation is disabled when using monthly contributions.</p>}
                                     <hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '8px 0' }}/>
                                     <InputGroup icon={<Landmark size={18} />} label="Initial Investment (PV)" id="present-value" value={presentValue} onChange={handleInputChange(setPresentValue)} disabled={calculationTarget === 'pv'} placeholder="10,000" unit="$"/>
@@ -487,8 +500,8 @@ export default function LumpSumCalculator() {
                             </Card>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: window.innerWidth < 768 ? '16px' : '24px', minWidth: 0, width: '100%' }}>
-                            <div ref={summaryRef}><ResultSummaryCard error={error} summary={summary} calculatedResult={result} target={calculationTarget} formatters={{formatCurrency, formatPercent, formatYears}} /></div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? '16px' : '24px', minWidth: 0, width: '100%' }}>
+                            <div ref={summaryRef}><ResultSummaryCard error={error} summary={summary} calculatedResult={result} target={calculationTarget} formatters={{formatCurrency, formatPercent, formatYears}} isMobile={isMobile} /></div>
                             <div ref={analysisRef}>
                                 <Card>
                                     <CardHeader>
@@ -559,7 +572,7 @@ function DownloadModal({ isOpen, onClose, onDownload }) {
     );
 }
 
-function ResultSummaryCard({ error, summary, calculatedResult, target, formatters }) {
+function ResultSummaryCard({ error, summary, calculatedResult, target, formatters, isMobile = false }) {
     const { formatCurrency, formatPercent, formatYears } = formatters;
     
     if (error) return (
@@ -584,12 +597,12 @@ function ResultSummaryCard({ error, summary, calculatedResult, target, formatter
     
     return (
         <Card style={{ background: 'linear-gradient(135deg, #F3F7FD 0%, #E7F1FA 100%)' }}>
-            <CardContent style={{ padding: window.innerWidth < 768 ? '24px' : '32px' }}>
+            <CardContent style={{ padding: isMobile ? '24px' : '32px' }}>
                 <div style={{ textAlign: 'center' }}>
                     <p style={{ fontSize: '14px', fontWeight: '500', color: '#1F9A32', marginBottom: '8px' }}>{resultMapping[target].l}</p>
-                    <p style={{ fontSize: window.innerWidth < 768 ? '32px' : '40px', fontWeight: '800', color: '#002C51', letterSpacing: '-0.025em', margin: 0 }}>{resultMapping[target].v(calculatedResult)}</p>
+                    <p style={{ fontSize: isMobile ? '32px' : '40px', fontWeight: '800', color: '#002C51', letterSpacing: '-0.025em', margin: 0 }}>{resultMapping[target].v(calculatedResult)}</p>
                 </div>
-                <div style={{ marginTop: '32px', display: 'grid', gridTemplateColumns: window.innerWidth < 640 ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
+                <div style={{ marginTop: '32px', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: '20px' }}>
                     <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.7)', padding: '16px', borderRadius: '8px', textAlign: 'center', border: '1px solid #E7F1FA' }}>
                         <p style={{ fontSize: '13px', color: '#6b7280' }}>Total Contributions</p>
                         <p style={{ fontSize: '18px', fontWeight: '700', color: '#002C51', marginTop: '4px' }}>{formatCurrency(summary.totalContributions)}</p>
@@ -619,14 +632,13 @@ const ActiveDonutShape = (props) => {
     );
 };
 
-function BreakdownCardContent({ data, summary, formatCurrency, formatPercent }) {
+function BreakdownCardContent({ data, summary, formatCurrency, formatPercent, isMobile, isTablet }) {
     const [activeIndex, setActiveIndex] = useState(0);
     if (!data || data.some(d => d.value < 0)) return null;
     const COLORS = ['#002C51', '#1F9A32', '#92ADCB'];
-    const isMobile = window.innerWidth < 768;
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth < 1024 ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1fr 1fr', gap: isMobile ? '16px' : '24px', alignItems: 'center' }}>
             <div style={{ height: isMobile ? '180px' : '224px', width: '100%', minWidth: 0 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -647,7 +659,7 @@ function BreakdownCardContent({ data, summary, formatCurrency, formatPercent }) 
                     </div>
                 ))}
             </div>
-             <div style={{ gridColumn: window.innerWidth < 1024 ? '1' : '1 / -1', display: 'grid', gridTemplateColumns: window.innerWidth < 768 ? '1fr' : 'repeat(2, 1fr)', gap: '16px', textAlign: 'center' }}>
+             <div style={{ gridColumn: isTablet ? '1' : '1 / -1', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '16px', textAlign: 'center' }}>
                 <div style={{ backgroundColor: '#F3F7FD', padding: '12px', borderRadius: '8px', border: '1px solid #E7F1FA' }}>
                     <p style={{ fontSize: '13px', color: '#6b7280' }}>Return on Investment</p>
                     <p style={{ fontSize: '18px', fontWeight: '700', color: '#1F9A32', marginTop: '4px' }}>{formatPercent(summary.roi)}</p>
@@ -661,10 +673,9 @@ function BreakdownCardContent({ data, summary, formatCurrency, formatPercent }) 
     );
 }
 
-function ScenarioCardContent({ scenarios, formatCurrency }) {
+function ScenarioCardContent({ scenarios, formatCurrency, isMobile, isTablet }) {
     const [variable, setVariable] = useState('rate');
     if (!scenarios) return null;
-    const isMobile = window.innerWidth < 768;
     
     const data = scenarios[variable];
     const header = variable === 'rate' ? 'Annual Rate' : 'Inflation Rate';
@@ -699,9 +710,8 @@ function ScenarioCardContent({ scenarios, formatCurrency }) {
     );
 }
 
-function InvestmentChart({ data, formatCurrency }) {
+function InvestmentChart({ data, formatCurrency, isMobile = false }) {
     if (!data || data.length === 0) return null;
-    const isMobile = window.innerWidth < 768;
     return (
         <div style={{ height: isMobile ? '300px' : '384px', width: '100%', overflowX: 'hidden' }}>
             <ResponsiveContainer width="100%" height="100%">
@@ -714,7 +724,7 @@ function InvestmentChart({ data, formatCurrency }) {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(128, 128, 128, 0.2)" />
                     <XAxis dataKey="year" stroke="#9ca3af" tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }} dy={10} />
                     <YAxis stroke="#9ca3af" tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }} tickFormatter={(tick) => isMobile ? `$${Math.round(tick / 1000)}k` : `$${Math.round(tick / 1000)}k`} dx={isMobile ? -10 : -5} width={isMobile ? 50 : 60}/>
-                    <Tooltip content={<CustomTooltip formatCurrency={formatCurrency} />} />
+                    <Tooltip content={<CustomTooltip formatCurrency={formatCurrency} isMobile={isMobile} />} />
                     <Legend wrapperStyle={{paddingTop: '25px', fontSize: isMobile ? '11px' : '12px'}} iconSize={isMobile ? 10 : 14}/>
                     <Area type="monotone" dataKey="principal" stackId="1" stroke="#002C51" fill="url(#colorPrincipal)" name="Principal" />
                     <Area type="monotone" dataKey="contributions" stackId="1" stroke="#92ADCB" fill="url(#colorContributions)" name="Contributions" />
@@ -726,10 +736,9 @@ function InvestmentChart({ data, formatCurrency }) {
     );
 }
 
-const CustomTooltip = ({ active, payload, label, formatCurrency }) => {
+const CustomTooltip = ({ active, payload, label, formatCurrency, isMobile = false }) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
-        const isMobile = window.innerWidth < 768;
         return (
             <div style={{ 
                 padding: isMobile ? '12px' : '16px', 
@@ -757,9 +766,8 @@ const CustomTooltip = ({ active, payload, label, formatCurrency }) => {
     return null;
 };
 
-function YearlyTable({ data, formatCurrency }) {
+function YearlyTable({ data, formatCurrency, isMobile = false }) {
     if (!data || data.length < 2) return null;
-    const isMobile = window.innerWidth < 768;
     const tableData = data.slice(1).map((row, index) => ({...row, startingBalance: data[index].balance, interestEarned: row.balance - data[index].balance - (row.contributions - data[index].contributions) }));
     return (
         <div style={{ width: '100%', maxHeight: isMobile ? '300px' : '384px', overflowY: 'auto', overflowX: 'auto', borderRadius: '8px', border: '1px solid rgba(229, 231, 235, 0.8)' }}>

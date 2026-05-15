@@ -374,7 +374,7 @@ const InvestmentAdvisoryPage = () => {
                     <div style={{ flexGrow: 1, color: '#4b5563' }} className="service-list">
                       <h3 style={{ fontWeight: '600', marginBottom: '0.875rem', color: '#111827', fontSize: '0.8125rem' }}>Key Areas Covered:</h3>
                       <ul>
-                        <li>Financial Health Check</li>
+                        <li>Health Checkup</li>
                         <li>Goal-Based Financial Planning</li>
                         <li>Risk Management Planning</li>
                         <li>Investment Planning</li>
